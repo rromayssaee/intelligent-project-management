@@ -1,0 +1,135 @@
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+}
+
+body{
+    background:#f5f7fb;
+    font-family:"Segoe UI",sans-serif;
+}
+
+.page-header{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin-bottom:30px;
+}
+
+.page-title{
+    font-size:32px;
+    font-weight:700;
+    color:#0f172a;
+}
+
+.page-subtitle{
+    color:#64748b;
+}
+
+.top-actions{
+    display:flex;
+    gap:10px;
+}
+
+.btn-modern{
+    border:none;
+    border-radius:12px;
+    padding:12px 18px;
+    font-weight:600;
+}
+
+.btn-add{
+    background:#2563eb;
+    color:white;
+}
+
+.btn-add:hover{
+    background:#1d4ed8;
+}
+
+.btn-dashboard{
+    background:#0f172a;
+    color:white;
+}
+
+.btn-dashboard:hover{
+    background:#1e293b;
+}
+
+.card{
+    border:none;
+    border-radius:18px;
+    box-shadow:0 10px 25px rgba(0,0,0,.05);
+}
+
+.table{
+    margin:0;
+}
+
+.table thead{
+    background:#f8fafc;
+}
+
+.table th{
+    padding:18px;
+}
+
+.table td{
+    padding:18px;
+    vertical-align:middle;
+}
+
+.btn-task{
+    background:#06b6d4;
+    color:white;
+    border:none;
+    border-radius:10px;
+    padding:8px 14px;
+}
+
+.btn-edit{
+    background:#f59e0b;
+    color:white;
+    border:none;
+    border-radius:10px;
+    padding:8px 14px;
+}
+
+.btn-delete{
+    background:#ef4444;
+    color:white;
+    border:none;
+    border-radius:10px;
+    padding:8px 14px;
+}
+
+.btn-pdf{
+    background:#475569;
+    color:white;
+    border:none;
+    border-radius:10px;
+    padding:8px 14px;
+}
+
+.btn-task:hover,
+.btn-edit:hover,
+.btn-delete:hover,
+.btn-pdf:hover{
+    opacity:.9;
+}
+
+.role-badge{
+    background:#dbeafe;
+    color:#2563eb;
+    padding:8px 16px;
+    border-radius:999px;
+    font-weight:600;
+}
+
+.modal-card{
+    background:white;
+    border-radius:18px;
+    padding:25px;
+    margin-bottom:25px;
+    box-shadow:0 10px 25px rgba(0,0,0,.05);
+}

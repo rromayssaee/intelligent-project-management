@@ -1,4 +1,4 @@
-package org.example.intellipm;
+package com.example.intellipm;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -9,5 +9,4 @@ public class IntellipmApplication {
     public static void main(String[] args) {
         SpringApplication.run(IntellipmApplication.class, args);
     }
-
 }

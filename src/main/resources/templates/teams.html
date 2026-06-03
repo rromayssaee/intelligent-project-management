@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Gestion des Équipes</title>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+          rel="stylesheet">
+</head>
+<body>
+
+<div class="container mt-5">
+
+    <h2>Gestion des Équipes</h2>
+
+    <p id="roleInfo"
+       class="text-primary fw-bold">
+    </p>
+
+    <a href="/dashboard"
+       class="btn btn-secondary mb-3">
+        Retour Dashboard
+    </a>
+
+    <button class="btn btn-danger mb-3"
+            onclick="logout()">
+        Déconnexion
+    </button>
+
+    <button id="addTeamBtn"
+            class="btn btn-success mb-3"
+            onclick="showForm()">
+        Ajouter Équipe
+    </button>
+
+    <div id="teamForm"
+         style="display:none;"
+         class="card p-3 mb-3">
+
+        <input type="text"
+               id="nom"
+               class="form-control mb-2"
+               placeholder="Nom équipe">
+
+        <textarea id="description"
+                  class="form-control mb-2"
+                  placeholder="Description"></textarea>
+
+        <input type="date"
+               id="dateCreation"
+               class="form-control mb-2">
+
+        <button class="btn btn-primary"
+                onclick="addTeam()">
+            Enregistrer
+        </button>
+
+    </div>
+
+    <div id="editTeamForm"
+         style="display:none;"
+         class="card p-3 mb-3">
+
+        <h4>Modifier Équipe</h4>
+
+        <input type="hidden" id="editId">
+
+        <input type="text"
+               id="editNom"
+               class="form-control mb-2">
+
+        <textarea id="editDescription"
+                  class="form-control mb-2"></textarea>
+
+        <input type="date"
+               id="editDateCreation"
+               class="form-control mb-2">
+
+        <button class="btn btn-primary"
+                onclick="updateTeam()">
+            Mettre à jour
+        </button>
+
+    </div>
+
+    <div id="memberForm"
+         style="display:none;"
+         class="card p-3 mb-3">
+
+        <h4>Ajouter un membre à l'équipe</h4>
+
+        <input type="hidden" id="teamId">
+
+        <input type="number"
+               id="userId"
+               class="form-control mb-2"
+               placeholder="ID utilisateur">
+
+        <button class="btn btn-primary"
+                onclick="addMember()">
+            Ajouter à l'équipe
+        </button>
+
+    </div>
+
+    <table class="table table-bordered">
+
+        <thead>
+        <tr>
+            <th>ID</th>
+            <th>Nom</th>
+            <th>Description</th>
+            <th>Date Création</th>
+            <th>Membres</th>
+            <th>Actions</th>
+        </tr>
+        </thead>
+
+        <tbody id="teamsTable"></tbody>
+
+    </table>
+
+</div>
+
+
+
+<script>
+
+    const role = localStorage.getItem("role");
+    const isMember = role === "MEMBRE";
+    const token = localStorage.getItem("token");
+
+    if(!token){
+        window.location.href = "/";
+    }
+
+    document.getElementById("roleInfo").innerText =
+        "Connecté en tant que : " + role;
+
+    if(isMember){
+        document.getElementById("addTeamBtn").style.display = "none";
+    }
+
+    fetch("/api/teams",{
+        headers:{
+            "Authorization":"Bearer " + token
+        }
+    })
+        .then(response=>response.json())
+        .then(teams=>{
+
+            let rows="";
+
+            teams.forEach(team=>{
+
+                rows += `
+        <tr>
+            <td>${team.id}</td>
+            <td>${team.nom}</td>
+            <td>${team.description ?? ""}</td>
+            <td>${team.dateCreation ?? ""}</td>
+            <td>${team.users ? team.users.length : 0}</td>
+
+            <td>
+
+            ${role !== "MEMBRE" ? `
+
+                   <button class="btn btn-info btn-sm"
+                           onclick="manageMembers(${team.id})">
+                        Gérer Membres
+                   </button>
+
+                   <button class="btn btn-warning btn-sm"
+                           onclick="editTeam(${team.id})">
+                        Modifier
+                   </button>
+
+                   <button class="btn btn-danger btn-sm"
+                           onclick="deleteTeam(${team.id})">
+                        Supprimer
+                   </button>
+
+            ` : 'Lecture seule'}
+
+            </td>
+
+        </tr>
+        `;
+
+            });
+
+            document.getElementById("teamsTable").innerHTML=rows;
+
+        });
+
+    function showForm(){
+        document.getElementById("teamForm").style.display="block";
+    }
+
+    function addTeam(){
+
+        fetch("/api/teams",{
+
+            method:"POST",
+
+            headers:{
+                "Content-Type":"application/json",
+                "Authorization":"Bearer " + token
+            },
+
+            body:JSON.stringify({
+
+                nom:document.getElementById("nom").value,
+                description:document.getElementById("description").value,
+                dateCreation:document.getElementById("dateCreation").value
+
+            })
+
+        })
+            .then(response=>{
+
+                if(response.ok){
+
+                    alert("Équipe ajoutée");
+                    location.reload();
+
+                }else{
+
+                    alert("Erreur");
+
+                }
+
+            });
+
+    }
+
+    function deleteTeam(id){
+
+        if(!confirm("Supprimer cette équipe ?")){
+            return;
+        }
+
+        fetch("/api/teams/" + id,{
+
+            method:"DELETE",
+
+            headers:{
+                "Authorization":"Bearer " + token
+            }
+
+        })
+            .then(response=>{
+
+                if(response.ok){
+
+                    alert("Équipe supprimée");
+                    location.reload();
+
+                }else{
+
+                    alert("Erreur");
+
+                }
+
+            });
+
+    }
+
+    function editTeam(id){
+
+        fetch("/api/teams/" + id,{
+
+            headers:{
+                "Authorization":"Bearer " + token
+            }
+
+        })
+            .then(response=>response.json())
+            .then(team=>{
+
+                document.getElementById("editTeamForm").style.display="block";
+
+                document.getElementById("editId").value = team.id;
+                document.getElementById("editNom").value = team.nom;
+                document.getElementById("editDescription").value = team.description;
+                document.getElementById("editDateCreation").value = team.dateCreation;
+
+            });
+
+    }
+
+    function updateTeam(){
+
+        const id = document.getElementById("editId").value;
+
+        fetch("/api/teams/" + id,{
+
+            method:"PUT",
+
+            headers:{
+                "Content-Type":"application/json",
+                "Authorization":"Bearer " + token
+            },
+
+            body:JSON.stringify({
+
+                nom:document.getElementById("editNom").value,
+                description:document.getElementById("editDescription").value,
+                dateCreation:document.getElementById("editDateCreation").value
+
+            })
+
+        })
+            .then(response=>{
+
+                if(response.ok){
+
+                    alert("Équipe modifiée");
+                    location.reload();
+
+                }else{
+
+                    alert("Erreur modification");
+
+                }
+
+            });
+
+    }
+
+    function manageMembers(teamId){
+
+        document.getElementById("memberForm").style.display = "block";
+
+        document.getElementById("teamId").value = teamId;
+    }
+
+    function addMember(){
+
+        const teamId = document.getElementById("teamId").value;
+        const userId = document.getElementById("userId").value;
+
+        fetch(`/api/teams/${teamId}/users/${userId}`,{
+
+            method:"PUT",
+
+            headers:{
+                "Authorization":"Bearer " + token
+            }
+
+        })
+            .then(response=>{
+
+                if(response.ok){
+
+                    alert("Membre ajouté à l'équipe");
+
+                    location.reload();
+
+                }else{
+
+                    alert("Erreur ajout membre");
+
+                }
+
+            });
+
+    }
+
+    function logout(){
+
+        localStorage.clear();
+
+        window.location.href="/";
+
+    }
+
+</script>
+
+</body>
+</html>
