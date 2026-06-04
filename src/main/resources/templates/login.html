@@ -111,10 +111,7 @@
                     data.token
                 );
 
-                localStorage.setItem(
-                    "role",
-                    data.role
-                );
+                localStorage.setItem("role", data.role || "MEMBRE");
 
                 localStorage.setItem(
                     "email",

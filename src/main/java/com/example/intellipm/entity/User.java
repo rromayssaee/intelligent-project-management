@@ -3,6 +3,9 @@ package com.example.intellipm.entity;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
@@ -21,7 +24,8 @@ public class User {
 
     private String motDePasseHash;
 
-    private String role;
+    @Enumerated(EnumType.STRING)
+    private Role role;
 
     private LocalDate dateInscription;
 
@@ -65,11 +69,11 @@ public class User {
         this.motDePasseHash = motDePasseHash;
     }
 
-    public String getRole() {
+    public Role getRole() {
         return role;
     }
 
-    public void setRole(String role) {
+    public void setRole(Role role) {
         this.role = role;
     }
 

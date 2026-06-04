@@ -2,421 +2,502 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <title>Gestion des Tâches</title>
-
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
-          rel="stylesheet">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestion des Tâches – IntelliPM</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
     <link rel="stylesheet" href="/css/tasks.css">
-
-    <link rel="stylesheet"
-          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
 </head>
 <body>
 
+<!-- ===== MODAL AJOUTER ===== -->
+<div class="modal-overlay" id="addModal">
+    <div class="modal-card">
+        <div class="modal-header-custom">
+            <h5><i class="bi bi-plus-circle-fill me-2"></i>Nouvelle Tâche</h5>
+            <button class="btn-close-modal" onclick="closeModal('addModal')"><i class="bi bi-x-lg"></i></button>
+        </div>
+        <div class="modal-body-custom">
+            <div class="mb-3">
+                <label class="form-label fw-semibold">Titre *</label>
+                <input type="text" id="titre" class="form-control" placeholder="Titre de la tâche">
+            </div>
+            <div class="mb-3">
+                <label class="form-label fw-semibold">Description</label>
+                <textarea id="description" class="form-control" rows="3" placeholder="Description..."></textarea>
+            </div>
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label class="form-label fw-semibold">Statut</label>
+                    <select id="statut" class="form-select">
+                        <option value="CREEE">Créée</option>
+                        <option value="ASSIGNEE">Assignée</option>
+                        <option value="EN_COURS">En cours</option>
+                        <option value="EN_REVISION">En révision</option>
+                        <option value="TERMINEE">Terminée</option>
+                        <option value="SUSPENDUE">Suspendue</option>
+                        <option value="ANNULEE">Annulée</option>
+                    </select>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label class="form-label fw-semibold">Priorité</label>
+                    <select id="priorite" class="form-select">
+                        <option value="FAIBLE">Faible</option>
+                        <option value="MOYENNE">Moyenne</option>
+                        <option value="HAUTE">Haute</option>
+                    </select>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label class="form-label fw-semibold">Date d'échéance</label>
+                    <input type="date" id="dateEcheance" class="form-control">
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label class="form-label fw-semibold">Heures estimées</label>
+                    <input type="number" id="estimationHeures" class="form-control" placeholder="Ex: 8" min="0">
+                </div>
+            </div>
+            <div class="d-flex gap-2 justify-content-end">
+                <button class="btn btn-light" onclick="closeModal('addModal')">Annuler</button>
+                <button class="btn btn-primary px-4" onclick="addTask()">
+                    <i class="bi bi-save me-1"></i>Enregistrer
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ===== MODAL MODIFIER ===== -->
+<div class="modal-overlay" id="editModal">
+    <div class="modal-card">
+        <div class="modal-header-custom">
+            <h5><i class="bi bi-pencil-fill me-2"></i>Modifier la Tâche</h5>
+            <button class="btn-close-modal" onclick="closeModal('editModal')"><i class="bi bi-x-lg"></i></button>
+        </div>
+        <div class="modal-body-custom">
+            <input type="hidden" id="editId">
+            <div class="mb-3">
+                <label class="form-label fw-semibold">Titre *</label>
+                <input type="text" id="editTitre" class="form-control">
+            </div>
+            <div class="mb-3">
+                <label class="form-label fw-semibold">Description</label>
+                <textarea id="editDescription" class="form-control" rows="3"></textarea>
+            </div>
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label class="form-label fw-semibold">Statut</label>
+                    <select id="editStatut" class="form-select">
+                        <option value="CREEE">Créée</option>
+                        <option value="ASSIGNEE">Assignée</option>
+                        <option value="EN_COURS">En cours</option>
+                        <option value="EN_REVISION">En révision</option>
+                        <option value="TERMINEE">Terminée</option>
+                        <option value="SUSPENDUE">Suspendue</option>
+                        <option value="ANNULEE">Annulée</option>
+                    </select>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label class="form-label fw-semibold">Priorité</label>
+                    <select id="editPriorite" class="form-select">
+                        <option value="FAIBLE">Faible</option>
+                        <option value="MOYENNE">Moyenne</option>
+                        <option value="HAUTE">Haute</option>
+                    </select>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label class="form-label fw-semibold">Date d'échéance</label>
+                    <input type="date" id="editDateEcheance" class="form-control">
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label class="form-label fw-semibold">Heures estimées</label>
+                    <input type="number" id="editEstimationHeures" class="form-control" min="0">
+                </div>
+            </div>
+            <div class="d-flex gap-2 justify-content-end">
+                <button class="btn btn-light" onclick="closeModal('editModal')">Annuler</button>
+                <button class="btn btn-warning px-4" onclick="updateTask()">
+                    <i class="bi bi-save me-1"></i>Mettre à jour
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ===== PAGE ===== -->
 <div class="container py-5">
 
+    <!-- Header -->
     <div class="page-header">
-
         <div>
-
-            <h1 class="page-title">
-                ✅ Gestion des Tâches
-            </h1>
-
-            <p class="page-subtitle">
-                Suivez l'avancement des tâches du projet
-            </p>
-
+            <div class="breadcrumb-nav">
+                <a href="/projects" class="breadcrumb-link"><i class="bi bi-folder me-1"></i>Projets</a>
+                <i class="bi bi-chevron-right mx-2 text-muted"></i>
+                <span id="projectName" class="text-muted">Chargement...</span>
+            </div>
+            <h1 class="page-title">✅ Gestion des Tâches</h1>
+            <p class="page-subtitle">Suivez l'avancement des tâches du projet</p>
         </div>
-
-        <div id="roleInfo"
-             class="role-badge">
-        </div>
-
+        <div id="roleInfo" class="role-badge"></div>
     </div>
 
+    <!-- Stats rapides -->
+    <div class="stats-row" id="statsRow">
+        <div class="stat-box stat-total">
+            <div class="stat-number" id="statTotal">0</div>
+            <div class="stat-label">Total</div>
+        </div>
+        <div class="stat-box stat-progress">
+            <div class="stat-number" id="statEnCours">0</div>
+            <div class="stat-label">En cours</div>
+        </div>
+        <div class="stat-box stat-done">
+            <div class="stat-number" id="statTerminees">0</div>
+            <div class="stat-label">Terminées</div>
+        </div>
+        <div class="stat-box stat-late">
+            <div class="stat-number" id="statEnRetard">0</div>
+            <div class="stat-label">En retard</div>
+        </div>
+    </div>
+
+    <!-- Actions -->
     <div class="top-actions">
-
-        <button id="addTaskBtn"
-                class="btn btn-add btn-modern"
-                onclick="showForm()">
-
-            <i class="fa-solid fa-plus"></i>
-            Nouvelle tâche
-
+        <button id="addTaskBtn" class="btn btn-add btn-modern" onclick="openModal('addModal')">
+            <i class="bi bi-plus-lg me-1"></i>Nouvelle tâche
         </button>
-
-        <a href="/dashboard"
-           class="btn btn-dashboard btn-modern">
-
-            <i class="fa-solid fa-house"></i>
-            Dashboard
-
+        <a href="/dashboard" class="btn btn-dashboard btn-modern">
+            <i class="bi bi-house me-1"></i>Dashboard
         </a>
-
-        <button class="btn btn-danger btn-modern"
-                onclick="logout()">
-
-            <i class="fa-solid fa-right-from-bracket"></i>
-            Déconnexion
-
+        <a href="/projects" class="btn btn-modern" style="background:#475569;color:white;">
+            <i class="bi bi-arrow-left me-1"></i>Projets
+        </a>
+        <button class="btn btn-danger btn-modern" onclick="logout()">
+            <i class="bi bi-box-arrow-right me-1"></i>Déconnexion
         </button>
-
     </div>
 
-    <div id="taskForm"
-         style="display:none;"
-         class="task-form">
-
-        <input type="text"
-               id="titre"
-               class="form-control mb-2"
-               placeholder="Titre">
-
-        <textarea id="description"
-                  class="form-control mb-2"
-                  placeholder="Description"></textarea>
-
-        <input type="date"
-               id="dateEcheance"
-               class="form-control mb-2">
-
-        <input type="number"
-               id="estimationHeures"
-               class="form-control mb-2"
-               placeholder="Heures estimées">
-
-        <select id="statut" class="form-control mb-2">
-            <option value="A_FAIRE">À faire</option>
+    <!-- Filtres -->
+    <div class="filters-bar">
+        <select id="filterStatut" class="form-select filter-select" onchange="filterTasks()">
+            <option value="">Tous les statuts</option>
+            <option value="CREEE">Créée</option>
+            <option value="ASSIGNEE">Assignée</option>
             <option value="EN_COURS">En cours</option>
+            <option value="EN_REVISION">En révision</option>
             <option value="TERMINEE">Terminée</option>
+            <option value="SUSPENDUE">Suspendue</option>
+            <option value="ANNULEE">Annulée</option>
         </select>
-
-        <select id="priorite" class="form-control mb-2">
-            <option value="FAIBLE">Faible</option>
-            <option value="MOYENNE">Moyenne</option>
+        <select id="filterPriorite" class="form-select filter-select" onchange="filterTasks()">
+            <option value="">Toutes les priorités</option>
             <option value="HAUTE">Haute</option>
+            <option value="MOYENNE">Moyenne</option>
+            <option value="FAIBLE">Faible</option>
         </select>
-
-        <button class="btn btn-primary"
-                onclick="addTask()">
-            Enregistrer
-        </button>
-
+        <input type="text" id="searchTask" class="form-control filter-select" placeholder="🔍 Rechercher une tâche..." oninput="filterTasks()">
     </div>
 
-
-    <div id="editTaskForm"
-         style="display:none;"
-         class="task-form">
-
-        <h4>Modifier Tâche</h4>
-
-        <input type="hidden" id="editId">
-
-        <input type="text"
-               id="editTitre"
-               class="form-control mb-2">
-
-        <textarea id="editDescription"
-                  class="form-control mb-2"></textarea>
-
-        <input type="date"
-               id="editDateEcheance"
-               class="form-control mb-2">
-
-        <input type="number"
-               id="editEstimationHeures"
-               class="form-control mb-2">
-
-        <select id="editStatut" class="form-control mb-2">
-            <option value="A_FAIRE">À faire</option>
-            <option value="EN_COURS">En cours</option>
-            <option value="TERMINEE">Terminée</option>
-        </select>
-
-        <select id="editPriorite" class="form-control mb-2">
-            <option value="FAIBLE">Faible</option>
-            <option value="MOYENNE">Moyenne</option>
-            <option value="HAUTE">Haute</option>
-        </select>
-
-        <button class="btn btn-primary"
-                onclick="updateTask()">
-            Mettre à jour
-        </button>
-
-    </div>
-
+    <!-- Tableau -->
     <div class="tasks-card">
-
         <table class="table">
-
-        <thead>
-        <tr>
-            <th>Titre</th>
-            <th>Statut</th>
-            <th>Priorité</th>
-            <th>Date Échéance</th>
-            <th>Heures</th>
-            <th>Actions</th>
-        </tr>
-        </thead>
-
-        <tbody id="tasksTable">
-
-        </tbody>
-
-    </table>
+            <thead>
+            <tr>
+                <th>Titre</th>
+                <th>Statut</th>
+                <th>Priorité</th>
+                <th>Date Échéance</th>
+                <th>Heures</th>
+                <th>Actions</th>
+            </tr>
+            </thead>
+            <tbody id="tasksTable">
+            <tr>
+                <td colspan="6" class="text-center py-4 text-muted">
+                    <i class="bi bi-hourglass-split me-2"></i>Chargement...
+                </td>
+            </tr>
+            </tbody>
+        </table>
     </div>
 
 </div>
 
 <script>
-
-    const role = localStorage.getItem("role");
     const token = localStorage.getItem("token");
+    const role  = localStorage.getItem("role");
 
-    if(!token){
-        window.location.href="/";
-    }
+    // Rediriger si pas connecté
+    if (!token) window.location.href = "/";
 
-    document.getElementById("roleInfo").innerText =
-        "Connecté en tant que : " + role;
+    // Afficher le rôle
+    document.getElementById("roleInfo").innerText = "Connecté : " + role;
 
-    if(role === "MEMBRE"){
-
+    // Masquer bouton ajout pour MEMBRE
+    if (role === "MEMBRE") {
         document.getElementById("addTaskBtn").style.display = "none";
-
     }
 
-    const params = new URLSearchParams(window.location.search);
-
+    // Lire projectId depuis l'URL dynamiquement
+    const params    = new URLSearchParams(window.location.search);
     const projectId = params.get("projectId");
 
-    fetch("/api/tasks/project/" + projectId,{
-        headers:{
-            "Authorization":"Bearer " + token
-        }
-    })
-        .then(response=>response.json())
-        .then(tasks=>{
+    if (!projectId) {
+        document.getElementById("tasksTable").innerHTML =
+            `<tr><td colspan="6" class="text-center text-danger py-4">
+                <i class="bi bi-exclamation-triangle me-2"></i>
+                Aucun projet sélectionné. <a href="/projects">Retour aux projets</a>
+             </td></tr>`;
+    }
 
-            let rows="";
+    let allTasks = [];
 
-            tasks.forEach(task=>{
-
-                rows += `
-<tr>
-    <td>${task.titre}</td>
-    <td>
-
-${
-                    task.statut === "TERMINEE"
-                        ? '<span class="badge-status status-done">Terminée</span>'
-                        : task.statut === "EN_COURS"
-                            ? '<span class="badge-status status-progress">En cours</span>'
-                            : '<span class="badge-status status-todo">À faire</span>'
-                }
-
-</td>
-    <td>
-
-${
-                    task.priorite === "HAUTE"
-                        ? '<span class="priority-high">Haute</span>'
-                        : task.priorite === "MOYENNE"
-                            ? '<span class="priority-medium">Moyenne</span>'
-                            : '<span class="priority-low">Faible</span>'
-                }
-
-</td>
-    <td>${task.dateEcheance ?? ""}</td>
-    <td>${task.estimationHeures ?? ""}</td>
-    <td>
-
-    ${role !== "MEMBRE" ? `
-
-    <button class="btn btn-warning btn-sm"
-            onclick="editTask(${task.id})">
-        Modifier
-    </button>
-
-    <button class="btn btn-danger btn-sm"
-            onclick="deleteTask(${task.id})">
-        Supprimer
-    </button>
-
-    ` : 'Lecture seule'}
-
-    </td>
-</tr>
-`;
-
+    // ===== CHARGER les tâches =====
+    function loadTasks() {
+        fetch("/api/tasks/project/" + projectId, {
+            headers: { "Authorization": "Bearer " + token }
+        })
+            .then(r => r.json())
+            .then(tasks => {
+                allTasks = tasks;
+                updateStats(tasks);
+                renderTasks(tasks);
+            })
+            .catch(() => {
+                document.getElementById("tasksTable").innerHTML =
+                    `<tr><td colspan="6" class="text-center text-danger py-4">Erreur de chargement</td></tr>`;
             });
+    }
 
-            document.getElementById("tasksTable").innerHTML=rows;
-
+    // Charger aussi le nom du projet
+    fetch("/api/projects/" + projectId, {
+        headers: { "Authorization": "Bearer " + token }
+    })
+        .then(r => r.json())
+        .then(p => {
+            document.getElementById("projectName").innerText = p.titre || "Projet #" + projectId;
+            document.title = "Tâches – " + (p.titre || "Projet");
+        })
+        .catch(() => {
+            document.getElementById("projectName").innerText = "Projet #" + projectId;
         });
 
-    function showForm(){
-
-        document.getElementById("taskForm").style.display="block";
-
+    // ===== STATS =====
+    function updateStats(tasks) {
+        const today = new Date().toISOString().split("T")[0];
+        document.getElementById("statTotal").innerText    = tasks.length;
+        document.getElementById("statEnCours").innerText  = tasks.filter(t => t.statut === "EN_COURS").length;
+        document.getElementById("statTerminees").innerText = tasks.filter(t => t.statut === "TERMINEE").length;
+        document.getElementById("statEnRetard").innerText  = tasks.filter(t =>
+            t.dateEcheance && t.dateEcheance < today && t.statut !== "TERMINEE" && t.statut !== "ANNULEE"
+        ).length;
     }
 
-    function addTask(){
-
-        fetch("/api/tasks/project/" + projectId,{
-
-            method:"POST",
-
-            headers:{
-                "Content-Type":"application/json",
-                "Authorization":"Bearer " + token
-            },
-
-            body: JSON.stringify({
-
-                titre: document.getElementById("titre").value,
-                description: document.getElementById("description").value,
-                dateEcheance: document.getElementById("dateEcheance").value,
-                estimationHeures: document.getElementById("estimationHeures").value,
-                statut: document.getElementById("statut").value,
-                priorite: document.getElementById("priorite").value
-
-            })
-
-        })
-            .then(response=>{
-
-                if(response.ok){
-
-                    alert("Tâche ajoutée");
-                    location.reload();
-
-                }else{
-
-                    alert("Erreur");
-
-                }
-            });
-    }
-
-    function deleteTask(id){
-
-        if(!confirm("Supprimer cette tâche ?")){
+    // ===== RENDER =====
+    function renderTasks(tasks) {
+        if (tasks.length === 0) {
+            document.getElementById("tasksTable").innerHTML =
+                `<tr><td colspan="6" class="text-center text-muted py-5">
+                    <i class="bi bi-inbox fs-3 d-block mb-2"></i>Aucune tâche pour ce projet
+                 </td></tr>`;
             return;
         }
 
-        const token = localStorage.getItem("token");
+        const today = new Date().toISOString().split("T")[0];
+        let rows = "";
 
-        fetch("/api/tasks/" + id,{
+        tasks.forEach(task => {
+            const isLate = task.dateEcheance && task.dateEcheance < today
+                && task.statut !== "TERMINEE" && task.statut !== "ANNULEE";
 
-            method:"DELETE",
+            rows += `
+<tr class="${isLate ? 'row-late' : ''}">
+    <td>
+        <span class="task-title">${task.titre}</span>
+        ${task.description ? `<br><small class="text-muted">${task.description}</small>` : ""}
+    </td>
+    <td>${badgeStatut(task.statut)}</td>
+    <td>${badgePriorite(task.priorite)}</td>
+    <td>
+        ${task.dateEcheance
+                ? `<span class="${isLate ? 'text-danger fw-bold' : ''}">${task.dateEcheance}${isLate ? ' <i class="bi bi-alarm text-danger"></i>' : ''}</span>`
+                : '<span class="text-muted">—</span>'}
+    </td>
+    <td>${task.estimationHeures != null ? task.estimationHeures + "h" : '<span class="text-muted">—</span>'}</td>
+    <td>
+        ${role !== "MEMBRE" ? `
+        <button class="btn-action btn-edit" onclick="editTask(${task.id})">
+            <i class="bi bi-pencil"></i>
+        </button>
+        <button class="btn-action btn-delete" onclick="deleteTask(${task.id})">
+            <i class="bi bi-trash"></i>
+        </button>
+        ` : '<span class="badge bg-secondary">Lecture seule</span>'}
+    </td>
+</tr>`;
+        });
 
-            headers:{
-                "Authorization":"Bearer " + token
-            }
-
-        })
-            .then(response=>{
-
-                if(response.ok){
-
-                    alert("Tâche supprimée");
-                    location.reload();
-
-                }else{
-
-                    alert("Erreur");
-
-                }
-
-            });
+        document.getElementById("tasksTable").innerHTML = rows;
     }
 
-    function editTask(id){
-
-        const token = localStorage.getItem("token");
-
-        fetch("/api/tasks/" + id,{
-
-            headers:{
-                "Authorization":"Bearer " + token
-            }
-
-        })
-            .then(response=>response.json())
-            .then(task=>{
-
-                document.getElementById("editTaskForm").style.display="block";
-
-                document.getElementById("editId").value=task.id;
-                document.getElementById("editTitre").value=task.titre;
-                document.getElementById("editDescription").value=task.description;
-                document.getElementById("editStatut").value = task.statut;
-                document.getElementById("editPriorite").value = task.priorite;
-                document.getElementById("editDateEcheance").value=task.dateEcheance;
-                document.getElementById("editEstimationHeures").value=task.estimationHeures;
-
-
-            });
-
+    // ===== BADGES =====
+    function badgeStatut(statut) {
+        const map = {
+            "CREEE":       ["badge-status status-created",  "Créée"],
+            "ASSIGNEE":    ["badge-status status-assigned", "Assignée"],
+            "EN_COURS":    ["badge-status status-progress", "En cours"],
+            "EN_REVISION": ["badge-status status-review",   "En révision"],
+            "TERMINEE":    ["badge-status status-done",     "Terminée"],
+            "SUSPENDUE":   ["badge-status status-suspended","Suspendue"],
+            "ANNULEE":     ["badge-status status-cancelled","Annulée"],
+        };
+        const [cls, label] = map[statut] || ["badge-status", statut];
+        return `<span class="${cls}">${label}</span>`;
     }
 
-    function updateTask(){
+    function badgePriorite(p) {
+        const map = {
+            "HAUTE":   "priority-high",
+            "MOYENNE": "priority-medium",
+            "FAIBLE":  "priority-low",
+        };
+        return `<span class="${map[p] || ''}">${p || "—"}</span>`;
+    }
 
-        const id = document.getElementById("editId").value;
+    // ===== FILTRES =====
+    function filterTasks() {
+        const statut   = document.getElementById("filterStatut").value;
+        const priorite = document.getElementById("filterPriorite").value;
+        const search   = document.getElementById("searchTask").value.toLowerCase();
 
-        const token = localStorage.getItem("token");
+        const filtered = allTasks.filter(t =>
+            (!statut   || t.statut   === statut)   &&
+            (!priorite || t.priorite === priorite) &&
+            (!search   || t.titre.toLowerCase().includes(search))
+        );
 
-        fetch("/api/tasks/" + id,{
+        renderTasks(filtered);
+    }
 
-            method:"PUT",
+    // ===== MODALS =====
+    function openModal(id) {
+        document.getElementById(id).style.display = "flex";
+    }
 
-            headers:{
-                "Content-Type":"application/json",
-                "Authorization":"Bearer " + token
+    function closeModal(id) {
+        document.getElementById(id).style.display = "none";
+    }
+
+    // Fermer en cliquant dehors
+    document.querySelectorAll(".modal-overlay").forEach(overlay => {
+        overlay.addEventListener("click", e => {
+            if (e.target === overlay) closeModal(overlay.id);
+        });
+    });
+
+    // ===== AJOUTER =====
+    function addTask() {
+        const titre = document.getElementById("titre").value.trim();
+        if (!titre) { alert("Le titre est obligatoire"); return; }
+
+        fetch("/api/tasks/project/" + projectId, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "Authorization": "Bearer " + token
             },
-
-            body:JSON.stringify({
-
-                titre:document.getElementById("editTitre").value,
-                description:document.getElementById("editDescription").value,
-                dateEcheance:document.getElementById("editDateEcheance").value,
-                estimationHeures:document.getElementById("editEstimationHeures").value,
-                statut: document.getElementById("editStatut").value,
-                priorite: document.getElementById("editPriorite").value
-
+            body: JSON.stringify({
+                titre:            titre,
+                description:      document.getElementById("description").value,
+                dateEcheance:     document.getElementById("dateEcheance").value || null,
+                estimationHeures: parseInt(document.getElementById("estimationHeures").value) || null,
+                statut:           document.getElementById("statut").value,
+                priorite:         document.getElementById("priorite").value
             })
-
         })
-            .then(response=>{
-
-                if(response.ok){
-
-                    alert("Tâche modifiée");
-                    location.reload();
-
-                }else{
-
-                    alert("Erreur modification");
-
+            .then(r => {
+                if (r.ok) {
+                    closeModal("addModal");
+                    loadTasks();
+                } else {
+                    alert("Erreur lors de l'ajout");
                 }
-
             });
-
     }
 
-    function logout(){
+    // ===== MODIFIER =====
+    function editTask(id) {
+        fetch("/api/tasks/" + id, {
+            headers: { "Authorization": "Bearer " + token }
+        })
+            .then(r => r.json())
+            .then(task => {
+                document.getElementById("editId").value              = task.id;
+                document.getElementById("editTitre").value           = task.titre;
+                document.getElementById("editDescription").value     = task.description || "";
+                document.getElementById("editStatut").value          = task.statut;
+                document.getElementById("editPriorite").value        = task.priorite;
+                document.getElementById("editDateEcheance").value    = task.dateEcheance || "";
+                document.getElementById("editEstimationHeures").value = task.estimationHeures || "";
+                openModal("editModal");
+            });
+    }
 
+    function updateTask() {
+        const id    = document.getElementById("editId").value;
+        const titre = document.getElementById("editTitre").value.trim();
+        if (!titre) { alert("Le titre est obligatoire"); return; }
+
+        fetch("/api/tasks/" + id, {
+            method: "PUT",
+            headers: {
+                "Content-Type": "application/json",
+                "Authorization": "Bearer " + token
+            },
+            body: JSON.stringify({
+                titre:            titre,
+                description:      document.getElementById("editDescription").value,
+                dateEcheance:     document.getElementById("editDateEcheance").value || null,
+                estimationHeures: parseInt(document.getElementById("editEstimationHeures").value) || null,
+                statut:           document.getElementById("editStatut").value,
+                priorite:         document.getElementById("editPriorite").value
+            })
+        })
+            .then(r => {
+                if (r.ok) {
+                    closeModal("editModal");
+                    loadTasks();
+                } else {
+                    alert("Erreur lors de la modification");
+                }
+            });
+    }
+
+    // ===== SUPPRIMER =====
+    function deleteTask(id) {
+        if (!confirm("Supprimer cette tâche ?")) return;
+
+        fetch("/api/tasks/" + id, {
+            method: "DELETE",
+            headers: { "Authorization": "Bearer " + token }
+        })
+            .then(r => {
+                if (r.ok) loadTasks();
+                else alert("Erreur lors de la suppression");
+            });
+    }
+
+    // ===== DECONNEXION =====
+    function logout() {
         localStorage.clear();
-
-        window.location.href="/";
-
+        window.location.href = "/login";
     }
 
+    // ===== INIT =====
+    if (projectId) loadTasks();
 </script>
 
 </body>

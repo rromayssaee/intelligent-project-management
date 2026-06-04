@@ -10,6 +10,9 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 import com.example.intellipm.repository.UserRepository;
+import com.example.intellipm.entity.Role;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.EnumType;
 
 import java.time.LocalDate;
 
@@ -34,6 +37,7 @@ public class AuthController {
 
     @PostMapping("/register")
     public AuthResponse register(@RequestBody RegisterRequest request) {
+
         if (userRepository.findByEmail(request.getEmail()).isPresent()) {
             throw new RuntimeException("Email déjà utilisé");
         }
@@ -42,18 +46,37 @@ public class AuthController {
         user.setNom(request.getNom());
         user.setEmail(request.getEmail());
         user.setMotDePasseHash(passwordEncoder.encode(request.getPassword()));
-        user.setRole(request.getRole());
+
+        // ROLE — depuis la requête, MEMBRE par défaut
+        if (request.getRole() != null && !request.getRole().isEmpty()) {
+            try {
+                user.setRole(Role.valueOf(request.getRole()));
+            } catch (IllegalArgumentException e) {
+                user.setRole(Role.MEMBRE);
+            }
+        } else {
+            user.setRole(Role.MEMBRE);
+        }
+
         user.setDateInscription(LocalDate.now());
 
         userRepository.save(user);
 
-        String token = jwtService.generateToken(user.getEmail(), user.getRole());
+        String token = jwtService.generateToken(
+                user.getEmail(),
+                user.getRole().name()
+        );
 
-        return new AuthResponse(token, user.getEmail(), user.getRole());
+        return new AuthResponse(
+                token,
+                user.getEmail(),
+                user.getRole().name()
+        );
     }
 
     @PostMapping("/login")
     public AuthResponse login(@RequestBody LoginRequest request) {
+
         authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(
                         request.getEmail(),
@@ -64,8 +87,15 @@ public class AuthController {
         User user = userRepository.findByEmail(request.getEmail())
                 .orElseThrow(() -> new RuntimeException("Utilisateur introuvable"));
 
-        String token = jwtService.generateToken(user.getEmail(), user.getRole());
+        String token = jwtService.generateToken(
+                user.getEmail(),
+                user.getRole().name()
+        );
 
-        return new AuthResponse(token, user.getEmail(), user.getRole());
+        return new AuthResponse(
+                token,
+                user.getEmail(),
+                user.getRole().name()
+        );
     }
 }

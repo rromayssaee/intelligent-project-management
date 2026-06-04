@@ -11,6 +11,10 @@ public class ViewController {
         return "login";
     }
 
+    @GetMapping("/login")
+    public String login() { return "login";
+    }
+
     @GetMapping("/register")
     public String register() {
         return "register";
@@ -34,6 +38,11 @@ public class ViewController {
     @GetMapping("/teams")
     public String teams() {
         return "teams";
+    }
+
+    @GetMapping("/reports")
+    public String reports() {
+        return "reports";
     }
 
     @GetMapping("/users")

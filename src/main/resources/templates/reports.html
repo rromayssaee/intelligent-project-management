@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rapports – IntelliPM</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="/css/reports.css">
+</head>
+<body>
+
+<div class="container py-5">
+
+    <!-- Header -->
+    <div class="page-header">
+        <div>
+            <h1 class="page-title">📊 Rapports de Projet</h1>
+            <p class="page-subtitle">Générez et exportez des rapports d'avancement</p>
+        </div>
+        <div class="role-badge" id="roleInfo"></div>
+    </div>
+
+    <!-- Actions nav -->
+    <div class="top-actions">
+        <a href="/dashboard" class="btn btn-dashboard btn-modern">
+            <i class="bi bi-house me-1"></i>Dashboard
+        </a>
+        <a href="/projects" class="btn btn-modern" style="background:#475569;color:white;">
+            <i class="bi bi-folder me-1"></i>Projets
+        </a>
+        <button class="btn btn-danger btn-modern" onclick="logout()">
+            <i class="bi bi-box-arrow-right me-1"></i>Déconnexion
+        </button>
+    </div>
+
+    <!-- Sélecteur de projet -->
+    <div class="selector-card">
+        <div class="selector-title">
+            <i class="bi bi-search me-2"></i>Sélectionner un projet
+        </div>
+        <div class="selector-body">
+            <div class="d-flex gap-3 align-items-end flex-wrap">
+                <div style="flex:1; min-width:200px;">
+                    <label class="form-label fw-semibold">Projet</label>
+                    <select id="projectSelect" class="form-select">
+                        <option value="">-- Choisir un projet --</option>
+                    </select>
+                </div>
+                <button class="btn btn-generate" onclick="generateReport()">
+                    <i class="bi bi-lightning-fill me-2"></i>Générer le rapport
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Zone rapport -->
+    <div id="reportZone" style="display:none;">
+
+        <!-- En-tête rapport -->
+        <div class="report-header-card">
+            <div class="report-title-section">
+                <div class="report-icon"><i class="bi bi-file-earmark-bar-graph-fill"></i></div>
+                <div>
+                    <div class="report-project-name" id="reportProjectName">—</div>
+                    <div class="report-generated">
+                        <i class="bi bi-clock me-1"></i>Généré le <span id="reportDate"></span>
+                    </div>
+                </div>
+            </div>
+            <button class="btn btn-pdf" onclick="downloadPdf()">
+                <i class="bi bi-file-pdf-fill me-2"></i>Exporter PDF
+            </button>
+        </div>
+
+        <!-- Stats principales -->
+        <div class="report-stats">
+            <div class="rstat-box rstat-total">
+                <div class="rstat-icon"><i class="bi bi-list-task"></i></div>
+                <div class="rstat-number" id="rstatTotal">0</div>
+                <div class="rstat-label">Total tâches</div>
+            </div>
+            <div class="rstat-box rstat-done">
+                <div class="rstat-icon"><i class="bi bi-check-circle-fill"></i></div>
+                <div class="rstat-number" id="rstatDone">0</div>
+                <div class="rstat-label">Terminées</div>
+            </div>
+            <div class="rstat-box rstat-progress">
+                <div class="rstat-icon"><i class="bi bi-arrow-repeat"></i></div>
+                <div class="rstat-number" id="rstatProgress">0</div>
+                <div class="rstat-label">En cours</div>
+            </div>
+            <div class="rstat-box rstat-late">
+                <div class="rstat-icon"><i class="bi bi-exclamation-triangle-fill"></i></div>
+                <div class="rstat-number" id="rstatLate">0</div>
+                <div class="rstat-label">En retard</div>
+            </div>
+        </div>
+
+        <!-- Avancement -->
+        <div class="progress-card">
+            <div class="progress-card-header">
+                <span class="fw-bold fs-5">Avancement global</span>
+                <span class="progress-percent" id="progressPercent">0%</span>
+            </div>
+            <div class="progress mt-3" style="height: 20px; border-radius: 999px;">
+                <div id="progressBar"
+                     class="progress-bar"
+                     role="progressbar"
+                     style="width: 0%; border-radius: 999px; transition: width 1s ease;">
+                </div>
+            </div>
+            <div class="progress-legend">
+                <span><span class="dot dot-done"></span>Terminées</span>
+                <span><span class="dot dot-progress"></span>En cours</span>
+                <span><span class="dot dot-late"></span>En retard</span>
+            </div>
+        </div>
+
+        <!-- Résumé IA -->
+        <div class="ai-card">
+            <div class="ai-header">
+                <div class="ai-icon"><i class="bi bi-robot"></i></div>
+                <div>
+                    <div class="ai-title">Analyse intelligente</div>
+                    <div class="ai-subtitle">Résumé automatique de l'état du projet</div>
+                </div>
+            </div>
+            <div class="ai-content" id="aiSummary">—</div>
+        </div>
+
+        <!-- Détail tâches -->
+        <div class="tasks-breakdown">
+            <h5 class="breakdown-title"><i class="bi bi-pie-chart me-2"></i>Répartition des tâches</h5>
+            <div class="breakdown-grid" id="breakdownGrid"></div>
+        </div>
+
+    </div>
+
+    <!-- État vide -->
+    <div id="emptyState" class="empty-state">
+        <div class="empty-icon"><i class="bi bi-bar-chart-line"></i></div>
+        <div class="empty-title">Aucun rapport généré</div>
+        <div class="empty-subtitle">Sélectionnez un projet et cliquez sur "Générer le rapport"</div>
+    </div>
+
+</div>
+
+<script>
+    const token = localStorage.getItem("token");
+    const role  = localStorage.getItem("role");
+
+    if (!token) window.location.href = "/";
+    if (role === "MEMBRE") {
+        alert("Accès réservé aux chefs de projet et administrateurs");
+        window.location.href = "/dashboard";
+    }
+
+    document.getElementById("roleInfo").innerText = "Connecté : " + role;
+
+    let currentProjectId = null;
+
+    // ===== CHARGER PROJETS =====
+    fetch("/api/projects", {
+        headers: { "Authorization": "Bearer " + token }
+    })
+        .then(r => r.json())
+        .then(projects => {
+            const select = document.getElementById("projectSelect");
+            projects.forEach(p => {
+                const opt = document.createElement("option");
+                opt.value       = p.id;
+                opt.textContent = p.titre;
+                select.appendChild(opt);
+            });
+        });
+
+    // ===== GÉNÉRER RAPPORT =====
+    function generateReport() {
+        const projectId = document.getElementById("projectSelect").value;
+        if (!projectId) { alert("Veuillez sélectionner un projet"); return; }
+
+        currentProjectId = projectId;
+
+        fetch(`/api/reports/project/${projectId}`, {
+            headers: { "Authorization": "Bearer " + token }
+        })
+            .then(r => r.json())
+            .then(report => {
+                displayReport(report);
+            })
+            .catch(() => alert("Erreur lors de la génération du rapport"));
+    }
+
+    // ===== AFFICHER RAPPORT =====
+    function displayReport(r) {
+        document.getElementById("emptyState").style.display  = "none";
+        document.getElementById("reportZone").style.display  = "block";
+
+        // En-tête
+        document.getElementById("reportProjectName").innerText = r.titreProjet;
+        document.getElementById("reportDate").innerText =
+            new Date().toLocaleDateString("fr-FR", { day: "2-digit", month: "long", year: "numeric" });
+
+        // Stats
+        document.getElementById("rstatTotal").innerText    = r.totalTaches;
+        document.getElementById("rstatDone").innerText     = r.tachesTerminees;
+        document.getElementById("rstatProgress").innerText = r.tachesEnCours;
+        document.getElementById("rstatLate").innerText     = r.tachesEnRetard;
+
+        // Barre de progression
+        const pct = Math.round(r.tauxAvancement);
+        document.getElementById("progressPercent").innerText = pct + "%";
+        const bar = document.getElementById("progressBar");
+        bar.style.width = pct + "%";
+        bar.className   = "progress-bar " + (pct === 100 ? "bg-success" : pct > 50 ? "bg-primary" : "bg-warning");
+
+        // Résumé IA
+        document.getElementById("aiSummary").innerHTML = buildAiSummary(r);
+
+        // Breakdown
+        buildBreakdown(r);
+
+        // Scroll vers le rapport
+        document.getElementById("reportZone").scrollIntoView({ behavior: "smooth" });
+    }
+
+    // ===== RÉSUMÉ IA =====
+    function buildAiSummary(r) {
+        const pct      = Math.round(r.tauxAvancement);
+        const restant  = r.totalTaches - r.tachesTerminees;
+        let niveau     = pct === 100 ? "excellent" : pct >= 70 ? "bon" : pct >= 40 ? "modéré" : "faible";
+        let icon       = pct === 100 ? "✅" : pct >= 70 ? "🟢" : pct >= 40 ? "🟡" : "🔴";
+        let colorClass = pct === 100 ? "summary-excellent" : pct >= 70 ? "summary-good" : pct >= 40 ? "summary-medium" : "summary-bad";
+
+        let lines = [];
+
+        lines.push(`${icon} Le projet <strong>${r.titreProjet}</strong> affiche un taux d'avancement <strong>${niveau}</strong> de <strong>${pct}%</strong>.`);
+
+        if (r.totalTaches === 0) {
+            lines.push("ℹ️ Aucune tâche n'a encore été créée pour ce projet.");
+        } else {
+            lines.push(`📋 Sur <strong>${r.totalTaches}</strong> tâche(s) au total, <strong>${r.tachesTerminees}</strong> sont terminées et <strong>${r.tachesEnCours}</strong> sont en cours.`);
+        }
+
+        if (r.tachesEnRetard > 0) {
+            lines.push(`⚠️ <strong>${r.tachesEnRetard}</strong> tâche(s) sont en retard — une attention immédiate est recommandée.`);
+        } else if (r.totalTaches > 0) {
+            lines.push("✔️ Aucune tâche n'est en retard — le calendrier est respecté.");
+        }
+
+        if (pct === 100) {
+            lines.push("🎉 Félicitations ! Toutes les tâches sont terminées. Le projet peut être clôturé.");
+        } else if (restant > 0) {
+            lines.push(`📌 Il reste <strong>${restant}</strong> tâche(s) à compléter pour finaliser le projet.`);
+        }
+
+        return `<div class="${colorClass}">${lines.map(l => `<p class="summary-line">${l}</p>`).join("")}</div>`;
+    }
+
+    // ===== BREAKDOWN =====
+    function buildBreakdown(r) {
+        const autres = r.totalTaches - r.tachesTerminees - r.tachesEnCours - r.tachesEnRetard;
+
+        const items = [
+            { label: "Terminées",  count: r.tachesTerminees, cls: "break-done",     icon: "bi-check-circle-fill" },
+            { label: "En cours",   count: r.tachesEnCours,   cls: "break-progress", icon: "bi-arrow-repeat" },
+            { label: "En retard",  count: r.tachesEnRetard,  cls: "break-late",     icon: "bi-exclamation-triangle-fill" },
+            { label: "Autres",     count: Math.max(0, autres), cls: "break-other",  icon: "bi-three-dots" },
+        ];
+
+        document.getElementById("breakdownGrid").innerHTML = items.map(item => `
+            <div class="break-item ${item.cls}">
+                <i class="bi ${item.icon} break-item-icon"></i>
+                <div class="break-item-count">${item.count}</div>
+                <div class="break-item-label">${item.label}</div>
+                <div class="break-item-bar">
+                    <div class="break-item-fill"
+                         style="width:${r.totalTaches > 0 ? Math.round((item.count/r.totalTaches)*100) : 0}%">
+                    </div>
+                </div>
+                <div class="break-item-pct">
+                    ${r.totalTaches > 0 ? Math.round((item.count/r.totalTaches)*100) : 0}%
+                </div>
+            </div>
+        `).join("");
+    }
+
+    // ===== EXPORTER PDF =====
+    function downloadPdf() {
+        if (!currentProjectId) return;
+
+        fetch(`/api/reports/project/${currentProjectId}/pdf`, {
+            headers: { "Authorization": "Bearer " + token }
+        })
+            .then(r => r.blob())
+            .then(blob => {
+                const url = window.URL.createObjectURL(blob);
+                const a   = document.createElement("a");
+                a.href     = url;
+                a.download = `rapport-projet-${currentProjectId}.pdf`;
+                document.body.appendChild(a);
+                a.click();
+                a.remove();
+            })
+            .catch(() => alert("Erreur lors de l'export PDF"));
+    }
+
+    // ===== DÉCONNEXION =====
+    function logout() {
+        localStorage.clear();
+        window.location.href = "/login";
+    }
+</script>
+
+</body>
+</html>
