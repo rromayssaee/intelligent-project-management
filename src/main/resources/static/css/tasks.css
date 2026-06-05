@@ -262,3 +262,19 @@ body {
     .top-actions  { flex-direction: column; }
     .filters-bar  { flex-direction: column; }
 }
+
+/* ===== SELECT STATUT MEMBRE ===== */
+.select-statut {
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    padding: 6px 10px;
+    font-size: 13px;
+    font-weight: 500;
+    color: #475569;
+    background: white;
+    cursor: pointer;
+    transition: .2s;
+}
+
+.select-statut:hover { border-color: #2563eb; }
+.select-statut:focus { outline: none; border-color: #2563eb; box-shadow: 0 0 0 3px rgba(37,99,235,.1); }

@@ -1,5 +1,6 @@
 package com.example.intellipm.entity;
 
+import com.example.intellipm.security.encryption.AttributeEncryptor;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 
@@ -26,6 +27,8 @@ public class Project {
     @NotNull(message = "La date de fin est obligatoire")
     private LocalDate dateFin;
 
+    @Convert(converter = AttributeEncryptor.class)
+    @Column(name = "description", columnDefinition = "TEXT")
     private String description;
 
     private String statut;

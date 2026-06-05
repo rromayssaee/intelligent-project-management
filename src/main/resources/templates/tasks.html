@@ -30,13 +30,9 @@
                 <div class="col-md-6 mb-3">
                     <label class="form-label fw-semibold">Statut</label>
                     <select id="statut" class="form-select">
-                        <option value="CREEE">Créée</option>
-                        <option value="ASSIGNEE">Assignée</option>
                         <option value="EN_COURS">En cours</option>
-                        <option value="EN_REVISION">En révision</option>
                         <option value="TERMINEE">Terminée</option>
-                        <option value="SUSPENDUE">Suspendue</option>
-                        <option value="ANNULEE">Annulée</option>
+                        <option value="EN_REVISION">En révision</option>
                     </select>
                 </div>
                 <div class="col-md-6 mb-3">
@@ -89,13 +85,9 @@
                 <div class="col-md-6 mb-3">
                     <label class="form-label fw-semibold">Statut</label>
                     <select id="editStatut" class="form-select">
-                        <option value="CREEE">Créée</option>
-                        <option value="ASSIGNEE">Assignée</option>
                         <option value="EN_COURS">En cours</option>
-                        <option value="EN_REVISION">En révision</option>
                         <option value="TERMINEE">Terminée</option>
-                        <option value="SUSPENDUE">Suspendue</option>
-                        <option value="ANNULEE">Annulée</option>
+                        <option value="EN_REVISION">En révision</option>
                     </select>
                 </div>
                 <div class="col-md-6 mb-3">
@@ -231,7 +223,7 @@
     const role  = localStorage.getItem("role");
 
     // Rediriger si pas connecté
-    if (!token) window.location.href = "/";
+    if (!token) window.location.href = "/login";
 
     // Afficher le rôle
     document.getElementById("roleInfo").innerText = "Connecté : " + role;
@@ -335,7 +327,13 @@
         <button class="btn-action btn-delete" onclick="deleteTask(${task.id})">
             <i class="bi bi-trash"></i>
         </button>
-        ` : '<span class="badge bg-secondary">Lecture seule</span>'}
+        ` : `
+        <select class="select-statut" onchange="updateStatut(${task.id}, this.value)">
+            <option value="EN_COURS"    ${task.statut === 'EN_COURS'    ? 'selected' : ''}>En cours</option>
+            <option value="TERMINEE"    ${task.statut === 'TERMINEE'    ? 'selected' : ''}>Terminée</option>
+            <option value="EN_REVISION" ${task.statut === 'EN_REVISION' ? 'selected' : ''}>En révision</option>
+        </select>
+        `}
     </td>
 </tr>`;
         });
@@ -473,6 +471,18 @@
                 } else {
                     alert("Erreur lors de la modification");
                 }
+            });
+    }
+
+    // ===== MODIFIER STATUT (MEMBRE) =====
+    function updateStatut(id, newStatut) {
+        fetch("/api/tasks/" + id + "/statut?statut=" + newStatut, {
+            method: "PATCH",
+            headers: { "Authorization": "Bearer " + token }
+        })
+            .then(r => {
+                if (r.ok) loadTasks();
+                else alert("Erreur lors de la mise à jour du statut");
             });
     }
 

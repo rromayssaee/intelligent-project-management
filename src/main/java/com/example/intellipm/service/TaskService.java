@@ -57,4 +57,10 @@ public class TaskService {
         Task task = afficherTaskParId(id);
         taskRepository.delete(task);
     }
+
+    public Task modifierStatut(Long id, String statut) {
+        Task task = afficherTaskParId(id);
+        task.setStatut(statut);
+        return taskRepository.save(task);
+    }
 }

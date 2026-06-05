@@ -28,56 +28,99 @@ public class SecurityConfig {
     }
 
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+    public SecurityFilterChain securityFilterChain(HttpSecurity http)
+            throws Exception {
+
         return http
+
                 .csrf(csrf -> csrf.disable())
 
                 .sessionManagement(session ->
-                        session.sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED)
+                        session.sessionCreationPolicy(
+                                SessionCreationPolicy.STATELESS
+                        )
                 )
 
                 .authorizeHttpRequests(auth -> auth
+
                         // Ressources statiques
-                        .requestMatchers("/css/**", "/js/**", "/images/**", "/favicon.ico").permitAll()
+                        .requestMatchers(
+                                "/css/**",
+                                "/js/**",
+                                "/images/**",
+                                "/favicon.ico"
+                        ).permitAll()
 
-                        // Pages publiques
-                        .requestMatchers("/", "/login", "/register").permitAll()
+                        // Authentification
+                        .requestMatchers("/api/auth/**")
+                        .permitAll()
 
-                        // API Auth
-                        .requestMatchers("/api/auth/**").permitAll()
+                        // Pages HTML
+                        .requestMatchers(
+                                "/",
+                                "/login",
+                                "/register",
+                                "/dashboard",
+                                "/projects",
+                                "/tasks",
+                                "/teams",
+                                "/users"
+                        ).permitAll()
 
-                        // Pages HTML protégées — laissez le JS gérer l'auth
-                        .requestMatchers("/dashboard", "/projects", "/tasks", "/teams", "/users").permitAll()
-
-                        // API USERS
-                        .requestMatchers("/api/users/**").hasRole("ADMIN")
+                        // API USERS — GET autorisé pour CHEF_PROJET (pour gérer les membres d'équipe)
+                        .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/users", "/api/users/**")
+                        .hasAnyRole("ADMIN", "CHEF_PROJET")
+                        .requestMatchers("/api/users/**")
+                        .hasRole("ADMIN")
 
                         // API TEAMS
-                        .requestMatchers("/api/teams/**").hasAnyRole("ADMIN", "CHEF_PROJET")
+                        .requestMatchers("/api/teams/**")
+                        .hasAnyRole(
+                                "ADMIN",
+                                "CHEF_PROJET"
+                        )
 
                         // API PROJECTS
-                        .requestMatchers("/api/projects/**").hasAnyRole("ADMIN", "CHEF_PROJET", "MEMBRE")
+                        .requestMatchers("/api/projects/**")
+                        .hasAnyRole(
+                                "ADMIN",
+                                "CHEF_PROJET",
+                                "MEMBRE"
+                        )
 
                         // API TASKS
-                        .requestMatchers("/api/tasks/**").hasAnyRole("ADMIN", "CHEF_PROJET", "MEMBRE")
+                        .requestMatchers("/api/tasks/**")
+                        .hasAnyRole(
+                                "ADMIN",
+                                "CHEF_PROJET",
+                                "MEMBRE"
+                        )
 
                         // API REPORTS
-                        .requestMatchers("/api/reports/**").hasAnyRole("ADMIN", "CHEF_PROJET")
+                        .requestMatchers("/api/reports/**")
+                        .hasAnyRole(
+                                "ADMIN",
+                                "CHEF_PROJET"
+                        )
 
                         // API DASHBOARD
-                        .requestMatchers("/api/dashboard/**").hasAnyRole("ADMIN", "CHEF_PROJET", "MEMBRE")
+                        .requestMatchers("/api/dashboard/**")
+                        .hasAnyRole(
+                                "ADMIN",
+                                "CHEF_PROJET",
+                                "MEMBRE"
+                        )
 
-                        .anyRequest().authenticated()
-                )
-
-                .formLogin(form -> form
-                        .loginPage("/login")
-                        .permitAll()
+                        .anyRequest()
+                        .authenticated()
                 )
 
                 .authenticationProvider(authenticationProvider())
 
-                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
+                .addFilterBefore(
+                        jwtAuthenticationFilter,
+                        UsernamePasswordAuthenticationFilter.class
+                )
 
                 .build();
     }

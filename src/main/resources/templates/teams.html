@@ -169,7 +169,7 @@
     const token = localStorage.getItem("token");
     const role  = localStorage.getItem("role");
 
-    if (!token) window.location.href = "/";
+    if (!token) window.location.href = "/login";
 
     document.getElementById("roleInfo").innerText = "Connecté : " + role;
 
@@ -407,6 +407,14 @@
 
     // ===== SUPPRIMER =====
     function deleteTeam(id) {
+        const team = allTeams.find(t => t.id === id);
+        const members = team ? (team.users || []) : [];
+
+        if (members.length > 0) {
+            alert("Impossible de supprimer une équipe qui contient des membres.\nRetirez d'abord tous les membres avant de supprimer l'équipe.");
+            return;
+        }
+
         if (!confirm("Supprimer cette équipe ?")) return;
 
         fetch("/api/teams/" + id, {
@@ -419,6 +427,24 @@
             });
     }
 
+    // ===== CHARGER UTILISATEURS =====
+    function loadUsers() {
+        fetch("/api/users", {
+            headers: { "Authorization": "Bearer " + token }
+        })
+            .then(r => {
+                if (!r.ok) throw new Error("Statut: " + r.status);
+                return r.json();
+            })
+            .then(users => {
+                allUsers = users;
+                console.log("Utilisateurs chargés:", users.length);
+            })
+            .catch(err => {
+                console.error("Erreur chargement utilisateurs:", err);
+            });
+    }
+
     // ===== AJOUTER MEMBRE =====
     function addMember() {
         const teamId = document.getElementById("teamId").value;
@@ -428,16 +454,20 @@
 
         fetch(`/api/teams/${teamId}/users/${userId}`, {
             method: "PUT",
-            headers: { "Authorization": "Bearer " + token }
+            headers: {
+                "Content-Type": "application/json",
+                "Authorization": "Bearer " + token
+            }
         })
             .then(r => {
                 if (r.ok) {
                     closeModal("membersModal");
                     loadTeams();
                 } else {
-                    alert("Erreur lors de l'ajout du membre");
+                    r.text().then(t => alert("Erreur: " + t));
                 }
-            });
+            })
+            .catch(err => alert("Erreur réseau: " + err));
     }
 
     // ===== DÉCONNEXION =====

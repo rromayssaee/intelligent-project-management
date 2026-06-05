@@ -1,11 +1,8 @@
 package com.example.intellipm.entity;
 
+import com.example.intellipm.security.encryption.AttributeEncryptor;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
-
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
-
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
@@ -19,9 +16,7 @@ public class User {
     private Long id;
 
     private String nom;
-
     private String email;
-
     private String motDePasseHash;
 
     @Enumerated(EnumType.STRING)
@@ -29,6 +24,16 @@ public class User {
 
     private LocalDate dateInscription;
 
+    // ===== CHAMPS CHIFFRÉS AES-256 =====
+    @Convert(converter = AttributeEncryptor.class)
+    @Column(name = "telephone")
+    private String telephone;
+
+    @Convert(converter = AttributeEncryptor.class)
+    @Column(name = "adresse")
+    private String adresse;
+
+    // ===== RELATIONS =====
     @ManyToMany
     @JoinTable(
             name = "user_team",
@@ -38,58 +43,32 @@ public class User {
     @JsonIgnoreProperties("users")
     private List<Team> teams = new ArrayList<>();
 
-    public User() {
-    }
+    public User() {}
 
-    public Long getId() {
-        return id;
-    }
+    // ===== GETTERS / SETTERS =====
+    public Long getId() { return id; }
 
-    public String getNom() {
-        return nom;
-    }
+    public String getNom() { return nom; }
+    public void setNom(String nom) { this.nom = nom; }
 
-    public void setNom(String nom) {
-        this.nom = nom;
-    }
+    public String getEmail() { return email; }
+    public void setEmail(String email) { this.email = email; }
 
-    public String getEmail() {
-        return email;
-    }
+    public String getMotDePasseHash() { return motDePasseHash; }
+    public void setMotDePasseHash(String h) { this.motDePasseHash = h; }
 
-    public void setEmail(String email) {
-        this.email = email;
-    }
+    public Role getRole() { return role; }
+    public void setRole(Role role) { this.role = role; }
 
-    public String getMotDePasseHash() {
-        return motDePasseHash;
-    }
+    public LocalDate getDateInscription() { return dateInscription; }
+    public void setDateInscription(LocalDate d) { this.dateInscription = d; }
 
-    public void setMotDePasseHash(String motDePasseHash) {
-        this.motDePasseHash = motDePasseHash;
-    }
+    public String getTelephone() { return telephone; }
+    public void setTelephone(String telephone) { this.telephone = telephone; }
 
-    public Role getRole() {
-        return role;
-    }
+    public String getAdresse() { return adresse; }
+    public void setAdresse(String adresse) { this.adresse = adresse; }
 
-    public void setRole(Role role) {
-        this.role = role;
-    }
-
-    public LocalDate getDateInscription() {
-        return dateInscription;
-    }
-
-    public void setDateInscription(LocalDate dateInscription) {
-        this.dateInscription = dateInscription;
-    }
-
-    public List<Team> getTeams() {
-        return teams;
-    }
-
-    public void setTeams(List<Team> teams) {
-        this.teams = teams;
-    }
+    public List<Team> getTeams() { return teams; }
+    public void setTeams(List<Team> teams) { this.teams = teams; }
 }

@@ -62,8 +62,14 @@ public class TeamService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("Utilisateur introuvable"));
 
-        team.getUsers().add(user);
+        // Ajouter depuis le côté propriétaire (User) pour que JPA persiste
+        if (!user.getTeams().contains(team)) {
+            user.getTeams().add(team);
+            userRepository.save(user);
+        }
 
-        return teamRepository.save(team);
+        // Recharger l'équipe depuis la BDD pour avoir les membres à jour
+        return teamRepository.findById(teamId)
+                .orElseThrow(() -> new RuntimeException("Équipe introuvable"));
     }
 }

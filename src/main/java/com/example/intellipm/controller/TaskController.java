@@ -49,4 +49,10 @@ public class TaskController {
     public void supprimerTask(@PathVariable Long id) {
         taskService.supprimerTask(id);
     }
+
+    @PatchMapping("/{id}/statut")
+    public Task modifierStatut(@PathVariable Long id,
+                               @RequestParam String statut) {
+        return taskService.modifierStatut(id, statut);
+    }
 }

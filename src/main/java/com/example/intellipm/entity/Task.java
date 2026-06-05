@@ -1,5 +1,6 @@
 package com.example.intellipm.entity;
 
+import com.example.intellipm.security.encryption.AttributeEncryptor;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import java.time.LocalDate;
@@ -14,6 +15,8 @@ public class Task {
 
     private String titre;
 
+    @Convert(converter = AttributeEncryptor.class)
+    @Column(name = "description", columnDefinition = "TEXT")
     private String description;
 
     private String statut;

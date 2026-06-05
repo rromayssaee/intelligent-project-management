@@ -38,6 +38,16 @@
                 <label class="form-label fw-semibold">Mot de passe *</label>
                 <input type="password" id="password" class="form-control" placeholder="Mot de passe">
             </div>
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label class="form-label fw-semibold">Téléphone</label>
+                    <input type="text" id="telephone" class="form-control" placeholder="Ex: 0612345678">
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label class="form-label fw-semibold">Adresse</label>
+                    <input type="text" id="adresse" class="form-control" placeholder="Ex: 12 Rue Mohammed V">
+                </div>
+            </div>
             <div class="d-flex gap-2 justify-content-end">
                 <button class="btn btn-light" onclick="closeModal('addModal')">Annuler</button>
                 <button class="btn btn-primary px-4" onclick="addUser()">
@@ -72,6 +82,16 @@
                     <option value="CHEF_PROJET">Chef de Projet</option>
                     <option value="ADMIN">Administrateur</option>
                 </select>
+            </div>
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label class="form-label fw-semibold">Téléphone</label>
+                    <input type="text" id="editTelephone" class="form-control" placeholder="Ex: 0612345678">
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label class="form-label fw-semibold">Adresse</label>
+                    <input type="text" id="editAdresse" class="form-control" placeholder="Ex: 12 Rue Mohammed V">
+                </div>
             </div>
             <div class="d-flex gap-2 justify-content-end">
                 <button class="btn btn-light" onclick="closeModal('editModal')">Annuler</button>
@@ -148,7 +168,8 @@
                 <th>Utilisateur</th>
                 <th>Email</th>
                 <th>Rôle</th>
-                <th>Équipes</th>
+                <th>Téléphone</th>
+                <th>Adresse</th>
                 <th>Inscription</th>
                 <th>Actions</th>
             </tr>
@@ -170,7 +191,7 @@
     const role  = localStorage.getItem("role");
 
     // Accès réservé aux ADMIN uniquement
-    if (!token) { window.location.href = "/"; }
+    if (!token) { window.location.href = "/login"; }
     if (role !== "ADMIN") {
         alert("Accès réservé aux administrateurs");
         window.location.href = "/dashboard";
@@ -209,7 +230,7 @@
     function renderUsers(users) {
         if (users.length === 0) {
             document.getElementById("usersTable").innerHTML =
-                `<tr><td colspan="6" class="text-center text-muted py-5">
+                `<tr><td colspan="7" class="text-center text-muted py-5">
                     <i class="bi bi-inbox fs-3 d-block mb-2"></i>Aucun utilisateur trouvé
                  </td></tr>`;
             return;
@@ -218,7 +239,6 @@
         let rows = "";
         users.forEach(user => {
             const initiale = user.nom ? user.nom.charAt(0).toUpperCase() : "?";
-            const teamsCount = user.teams ? user.teams.length : 0;
 
             rows += `
 <tr>
@@ -233,11 +253,8 @@
     </td>
     <td><span class="user-email">${user.email}</span></td>
     <td>${badgeRole(user.role)}</td>
-    <td>
-        <span class="teams-count">
-            <i class="bi bi-people me-1"></i>${teamsCount} équipe${teamsCount > 1 ? "s" : ""}
-        </span>
-    </td>
+    <td><span class="text-muted small">${user.telephone || "—"}</span></td>
+    <td><span class="text-muted small">${user.adresse   || "—"}</span></td>
     <td><span class="text-muted small">${user.dateInscription || "—"}</span></td>
     <td>
         <button class="btn-action btn-edit" onclick="editUser(${user.id})">
@@ -304,10 +321,12 @@
                 "Authorization": "Bearer " + token
             },
             body: JSON.stringify({
-                nom:      nom,
-                email:    email,
-                password: password,
-                role:     document.getElementById("role").value
+                nom:       nom,
+                email:     email,
+                password:  password,
+                role:      document.getElementById("role").value,
+                telephone: document.getElementById("telephone").value || null,
+                adresse:   document.getElementById("adresse").value   || null
             })
         })
             .then(r => {
@@ -323,10 +342,12 @@
         })
             .then(r => r.json())
             .then(user => {
-                document.getElementById("editId").value    = user.id;
-                document.getElementById("editNom").value   = user.nom;
-                document.getElementById("editEmail").value = user.email;
-                document.getElementById("editRole").value  = user.role;
+                document.getElementById("editId").value        = user.id;
+                document.getElementById("editNom").value        = user.nom;
+                document.getElementById("editEmail").value      = user.email;
+                document.getElementById("editRole").value       = user.role;
+                document.getElementById("editTelephone").value  = user.telephone || "";
+                document.getElementById("editAdresse").value    = user.adresse   || "";
                 openModal("editModal");
             });
     }
@@ -343,9 +364,11 @@
                 "Authorization": "Bearer " + token
             },
             body: JSON.stringify({
-                nom:   nom,
-                email: document.getElementById("editEmail").value,
-                role:  document.getElementById("editRole").value
+                nom:       nom,
+                email:     document.getElementById("editEmail").value,
+                role:      document.getElementById("editRole").value,
+                telephone: document.getElementById("editTelephone").value || null,
+                adresse:   document.getElementById("editAdresse").value   || null
             })
         })
             .then(r => {

@@ -59,6 +59,8 @@ public class AuthController {
         }
 
         user.setDateInscription(LocalDate.now());
+        user.setTelephone(request.getTelephone());
+        user.setAdresse(request.getAdresse());
 
         userRepository.save(user);
 

@@ -44,6 +44,8 @@ public class UserService {
         user.setNom(nouveauUser.getNom());
         user.setEmail(nouveauUser.getEmail());
         user.setRole(nouveauUser.getRole());
+        user.setTelephone(nouveauUser.getTelephone());
+        user.setAdresse(nouveauUser.getAdresse());
 
         return userRepository.save(user);
     }
