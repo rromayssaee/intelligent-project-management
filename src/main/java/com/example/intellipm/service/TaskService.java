@@ -2,10 +2,12 @@ package com.example.intellipm.service;
 
 import com.example.intellipm.entity.Project;
 import com.example.intellipm.entity.Task;
+import com.example.intellipm.entity.User;
+import com.example.intellipm.exception.ResourceNotFoundException;
 import com.example.intellipm.repository.ProjectRepository;
 import com.example.intellipm.repository.TaskRepository;
+import com.example.intellipm.repository.UserRepository;
 import org.springframework.stereotype.Service;
-import com.example.intellipm.exception.ResourceNotFoundException;
 
 import java.util.List;
 
@@ -14,16 +16,32 @@ public class TaskService {
 
     private final TaskRepository taskRepository;
     private final ProjectRepository projectRepository;
+    private final UserRepository userRepository;
 
-    public TaskService(TaskRepository taskRepository, ProjectRepository projectRepository) {
-        this.taskRepository = taskRepository;
+    public TaskService(TaskRepository taskRepository,
+                       ProjectRepository projectRepository,
+                       UserRepository userRepository) {
+        this.taskRepository  = taskRepository;
         this.projectRepository = projectRepository;
+        this.userRepository  = userRepository;
     }
 
     public Task ajouterTask(Long projectId, Task task) {
         Project project = projectRepository.findById(projectId)
-                .orElseThrow(() -> new ResourceNotFoundException("Projet introuvable avec id : " + projectId));
+                .orElseThrow(() -> new ResourceNotFoundException("Projet introuvable : " + projectId));
         task.setProject(project);
+
+        // Assignation si assignedUserId fourni
+        if (task.getAssignedUser() != null && task.getAssignedUser().getId() != null) {
+            User user = userRepository.findById(task.getAssignedUser().getId())
+                    .orElse(null);
+            task.setAssignedUser(user);
+            // Mettre le statut à ASSIGNEE automatiquement
+            if (user != null && "EN_COURS".equals(task.getStatut())) {
+                task.setStatut("ASSIGNEE");
+            }
+        }
+
         return taskRepository.save(task);
     }
 
@@ -35,9 +53,14 @@ public class TaskService {
         return taskRepository.findByProjectId(projectId);
     }
 
+    // Tâches d'un projet visibles par un membre spécifique
+    public List<Task> afficherTasksParProjetEtUser(Long projectId, Long userId) {
+        return taskRepository.findByProjectIdAndAssignedUserId(projectId, userId);
+    }
+
     public Task afficherTaskParId(Long id) {
         return taskRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Tâche introuvable avec id : " + id));
+                .orElseThrow(() -> new RuntimeException("Tâche introuvable : " + id));
     }
 
     public Task modifierTask(Long id, Task nouvelleTask) {
@@ -49,6 +72,14 @@ public class TaskService {
         task.setPriorite(nouvelleTask.getPriorite());
         task.setDateEcheance(nouvelleTask.getDateEcheance());
         task.setEstimationHeures(nouvelleTask.getEstimationHeures());
+
+        // Mettre à jour l'assignation
+        if (nouvelleTask.getAssignedUser() != null && nouvelleTask.getAssignedUser().getId() != null) {
+            User user = userRepository.findById(nouvelleTask.getAssignedUser().getId()).orElse(null);
+            task.setAssignedUser(user);
+        } else {
+            task.setAssignedUser(null);
+        }
 
         return taskRepository.save(task);
     }

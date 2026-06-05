@@ -55,6 +55,12 @@
                     <input type="date" id="dateFin" class="form-control">
                 </div>
             </div>
+            <div class="mb-3">
+                <label class="form-label fw-semibold">Équipe associée</label>
+                <select id="teamId" class="form-select">
+                    <option value="">-- Aucune équipe --</option>
+                </select>
+            </div>
             <div class="d-flex gap-2 justify-content-end">
                 <button class="btn btn-light" onclick="closeModal('addModal')">Annuler</button>
                 <button class="btn btn-primary px-4" onclick="addProject()">
@@ -110,6 +116,12 @@
                     <label class="form-label fw-semibold">Date fin *</label>
                     <input type="date" id="editDateFin" class="form-control">
                 </div>
+            </div>
+            <div class="mb-3">
+                <label class="form-label fw-semibold">Équipe associée</label>
+                <select id="editTeamId" class="form-select">
+                    <option value="">-- Aucune équipe --</option>
+                </select>
             </div>
             <div class="d-flex gap-2 justify-content-end">
                 <button class="btn btn-light" onclick="closeModal('editModal')">Annuler</button>
@@ -198,7 +210,7 @@
     const token = localStorage.getItem("token");
     const role  = localStorage.getItem("role");
 
-    if (!token) window.location.href = "/";
+    if (!token) window.location.href = "/login";
 
     document.getElementById("roleInfo").innerText = "Connecté : " + role;
 
@@ -207,6 +219,23 @@
     }
 
     let allProjects = [];
+    let allTeams    = [];
+
+    // ===== CHARGER ÉQUIPES =====
+    function loadTeams() {
+        fetch("/api/teams", {
+            headers: { "Authorization": "Bearer " + token }
+        })
+            .then(r => r.json())
+            .then(teams => {
+                allTeams = teams;
+                const options = `<option value="">-- Aucune équipe --</option>` +
+                    teams.map(t => `<option value="${t.id}">${t.nom}</option>`).join("");
+                document.getElementById("teamId").innerHTML     = options;
+                document.getElementById("editTeamId").innerHTML = options;
+            })
+            .catch(() => {});
+    }
 
     // ===== CHARGER =====
     function loadProjects() {
@@ -270,6 +299,11 @@
         <i class="bi bi-arrow-right mx-2 text-muted"></i>
         <span class="${isLate ? 'text-danger fw-bold' : ''}">${p.dateFin || "—"}${isLate ? ' <i class="bi bi-alarm"></i>' : ''}</span>
     </div>
+
+    ${p.team ? `
+    <div class="team-badge-project">
+        <i class="bi bi-people-fill me-1"></i>${p.team.nom}
+    </div>` : ''}
 
     <div class="progress-section">
         <div class="d-flex justify-content-between mb-1">
@@ -367,7 +401,10 @@
                 statut:      document.getElementById("statut").value,
                 priorite:    document.getElementById("priorite").value,
                 dateDebut:   document.getElementById("dateDebut").value || null,
-                dateFin:     document.getElementById("dateFin").value   || null
+                dateFin:     document.getElementById("dateFin").value   || null,
+                team:        document.getElementById("teamId").value
+                    ? { id: parseInt(document.getElementById("teamId").value) }
+                    : null
             })
         })
             .then(r => {
@@ -390,6 +427,7 @@
                 document.getElementById("editPriorite").value    = p.priorite    || "MOYENNE";
                 document.getElementById("editDateDebut").value   = p.dateDebut   || "";
                 document.getElementById("editDateFin").value     = p.dateFin     || "";
+                document.getElementById("editTeamId").value      = p.team ? p.team.id : "";
                 openModal("editModal");
             });
     }
@@ -411,7 +449,10 @@
                 statut:      document.getElementById("editStatut").value,
                 priorite:    document.getElementById("editPriorite").value,
                 dateDebut:   document.getElementById("editDateDebut").value || null,
-                dateFin:     document.getElementById("editDateFin").value   || null
+                dateFin:     document.getElementById("editDateFin").value   || null,
+                team:        document.getElementById("editTeamId").value
+                    ? { id: parseInt(document.getElementById("editTeamId").value) }
+                    : null
             })
         })
             .then(r => {
@@ -458,6 +499,7 @@
     }
 
     // ===== INIT =====
+    loadTeams();
     loadProjects();
 </script>
 

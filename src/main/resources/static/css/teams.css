@@ -330,3 +330,22 @@ body {
     .teams-grid  { grid-template-columns: 1fr; }
     .top-actions { flex-direction: column; }
 }
+
+/* ===== REMOVE MEMBER BUTTON ===== */
+.btn-remove-member {
+    background: #fee2e2;
+    color: #dc2626;
+    border: none;
+    border-radius: 8px;
+    padding: 6px 10px;
+    cursor: pointer;
+    font-size: 16px;
+    transition: .2s;
+    flex-shrink: 0;
+}
+
+.btn-remove-member:hover {
+    background: #dc2626;
+    color: white;
+    transform: scale(1.1);
+}

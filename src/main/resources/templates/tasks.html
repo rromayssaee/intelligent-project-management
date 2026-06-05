@@ -54,6 +54,12 @@
                     <input type="number" id="estimationHeures" class="form-control" placeholder="Ex: 8" min="0">
                 </div>
             </div>
+            <div class="mb-3">
+                <label class="form-label fw-semibold">Assigner à</label>
+                <select id="assignedUserId" class="form-select">
+                    <option value="">-- Non assignée --</option>
+                </select>
+            </div>
             <div class="d-flex gap-2 justify-content-end">
                 <button class="btn btn-light" onclick="closeModal('addModal')">Annuler</button>
                 <button class="btn btn-primary px-4" onclick="addTask()">
@@ -108,6 +114,12 @@
                     <label class="form-label fw-semibold">Heures estimées</label>
                     <input type="number" id="editEstimationHeures" class="form-control" min="0">
                 </div>
+            </div>
+            <div class="mb-3">
+                <label class="form-label fw-semibold">Assigner à</label>
+                <select id="editAssignedUserId" class="form-select">
+                    <option value="">-- Non assignée --</option>
+                </select>
             </div>
             <div class="d-flex gap-2 justify-content-end">
                 <button class="btn btn-light" onclick="closeModal('editModal')">Annuler</button>
@@ -201,6 +213,7 @@
                 <th>Titre</th>
                 <th>Statut</th>
                 <th>Priorité</th>
+                <th>Assigné à</th>
                 <th>Date Échéance</th>
                 <th>Heures</th>
                 <th>Actions</th>
@@ -208,7 +221,7 @@
             </thead>
             <tbody id="tasksTable">
             <tr>
-                <td colspan="6" class="text-center py-4 text-muted">
+                <td colspan="7" class="text-center py-4 text-muted">
                     <i class="bi bi-hourglass-split me-2"></i>Chargement...
                 </td>
             </tr>
@@ -246,6 +259,46 @@
     }
 
     let allTasks = [];
+    let allUsers = [];
+
+    // ===== CHARGER MEMBRES DE L'ÉQUIPE DU PROJET =====
+    function loadUsers() {
+        // D'abord récupérer le projet pour avoir son équipe
+        fetch("/api/projects/" + projectId, {
+            headers: { "Authorization": "Bearer " + token }
+        })
+            .then(r => r.json())
+            .then(project => {
+                if (project.team && project.team.id) {
+                    // Charger les membres de l'équipe
+                    fetch("/api/teams/" + project.team.id, {
+                        headers: { "Authorization": "Bearer " + token }
+                    })
+                        .then(r => r.json())
+                        .then(team => {
+                            allUsers = team.users || [];
+                            if (allUsers.length === 0) {
+                                const noMember = `<option value="">-- Aucun membre dans l'équipe --</option>`;
+                                document.getElementById("assignedUserId").innerHTML     = noMember;
+                                document.getElementById("editAssignedUserId").innerHTML = noMember;
+                                return;
+                            }
+                            const options = `<option value="">-- Non assignée --</option>` +
+                                allUsers.map(u =>
+                                    `<option value="${u.id}">${u.nom} (${u.role})</option>`
+                                ).join("");
+                            document.getElementById("assignedUserId").innerHTML     = options;
+                            document.getElementById("editAssignedUserId").innerHTML = options;
+                        });
+                } else {
+                    // Pas d'équipe associée au projet
+                    const msg = `<option value="">-- Associez d'abord une équipe au projet --</option>`;
+                    document.getElementById("assignedUserId").innerHTML     = msg;
+                    document.getElementById("editAssignedUserId").innerHTML = msg;
+                }
+            })
+            .catch(() => {});
+    }
 
     // ===== CHARGER les tâches =====
     function loadTasks() {
@@ -313,6 +366,11 @@
     </td>
     <td>${badgeStatut(task.statut)}</td>
     <td>${badgePriorite(task.priorite)}</td>
+    <td>
+        ${task.assignedUser
+                ? `<span class="assigned-chip"><i class="bi bi-person-fill me-1"></i>${task.assignedUser.nom}</span>`
+                : '<span class="text-muted">—</span>'}
+    </td>
     <td>
         ${task.dateEcheance
                 ? `<span class="${isLate ? 'text-danger fw-bold' : ''}">${task.dateEcheance}${isLate ? ' <i class="bi bi-alarm text-danger"></i>' : ''}</span>`
@@ -401,6 +459,19 @@
         const titre = document.getElementById("titre").value.trim();
         if (!titre) { alert("Le titre est obligatoire"); return; }
 
+        // Convertir la date au format yyyy-MM-dd si nécessaire
+        const rawDate = document.getElementById("dateEcheance").value;
+        let dateFormatted = null;
+        if (rawDate) {
+            // Si format MM/DD/YYYY → convertir en YYYY-MM-DD
+            if (rawDate.includes("/")) {
+                const parts = rawDate.split("/");
+                dateFormatted = `${parts[2]}-${parts[0].padStart(2,"0")}-${parts[1].padStart(2,"0")}`;
+            } else {
+                dateFormatted = rawDate;
+            }
+        }
+
         fetch("/api/tasks/project/" + projectId, {
             method: "POST",
             headers: {
@@ -409,11 +480,16 @@
             },
             body: JSON.stringify({
                 titre:            titre,
-                description:      document.getElementById("description").value,
-                dateEcheance:     document.getElementById("dateEcheance").value || null,
-                estimationHeures: parseInt(document.getElementById("estimationHeures").value) || null,
+                description:      document.getElementById("description").value || null,
+                dateEcheance:     dateFormatted,
+                estimationHeures: document.getElementById("estimationHeures").value
+                    ? parseInt(document.getElementById("estimationHeures").value)
+                    : null,
                 statut:           document.getElementById("statut").value,
-                priorite:         document.getElementById("priorite").value
+                priorite:         document.getElementById("priorite").value,
+                assignedUser:     document.getElementById("assignedUserId").value
+                    ? { id: parseInt(document.getElementById("assignedUserId").value) }
+                    : null
             })
         })
             .then(r => {
@@ -421,7 +497,7 @@
                     closeModal("addModal");
                     loadTasks();
                 } else {
-                    alert("Erreur lors de l'ajout");
+                    r.text().then(t => alert("Erreur: " + t));
                 }
             });
     }
@@ -440,6 +516,8 @@
                 document.getElementById("editPriorite").value        = task.priorite;
                 document.getElementById("editDateEcheance").value    = task.dateEcheance || "";
                 document.getElementById("editEstimationHeures").value = task.estimationHeures || "";
+                document.getElementById("editAssignedUserId").value  =
+                    task.assignedUser ? task.assignedUser.id : "";
                 openModal("editModal");
             });
     }
@@ -461,7 +539,10 @@
                 dateEcheance:     document.getElementById("editDateEcheance").value || null,
                 estimationHeures: parseInt(document.getElementById("editEstimationHeures").value) || null,
                 statut:           document.getElementById("editStatut").value,
-                priorite:         document.getElementById("editPriorite").value
+                priorite:         document.getElementById("editPriorite").value,
+                assignedUser:     document.getElementById("editAssignedUserId").value
+                    ? { id: parseInt(document.getElementById("editAssignedUserId").value) }
+                    : null
             })
         })
             .then(r => {
@@ -507,7 +588,10 @@
     }
 
     // ===== INIT =====
-    if (projectId) loadTasks();
+    if (projectId) {
+        loadUsers();
+        loadTasks();
+    }
 </script>
 
 </body>

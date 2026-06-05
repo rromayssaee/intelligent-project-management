@@ -278,3 +278,13 @@ body {
 
 .select-statut:hover { border-color: #2563eb; }
 .select-statut:focus { outline: none; border-color: #2563eb; box-shadow: 0 0 0 3px rgba(37,99,235,.1); }
+
+/* ===== ASSIGNED CHIP ===== */
+.assigned-chip {
+    background: #ede9fe;
+    color: #7c3aed;
+    padding: 4px 10px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 600;
+}

@@ -3,12 +3,11 @@ package com.example.intellipm.entity;
 import com.example.intellipm.security.encryption.AttributeEncryptor;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotBlank;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
 
 @Entity
 @Table(name = "projects")
@@ -21,10 +20,7 @@ public class Project {
     @NotBlank(message = "Le titre du projet est obligatoire")
     private String titre;
 
-    @NotNull(message = "La date de début est obligatoire")
     private LocalDate dateDebut;
-
-    @NotNull(message = "La date de fin est obligatoire")
     private LocalDate dateFin;
 
     @Convert(converter = AttributeEncryptor.class)
@@ -32,89 +28,43 @@ public class Project {
     private String description;
 
     private String statut;
-
     private String priorite;
 
     @OneToMany(mappedBy = "project", cascade = CascadeType.ALL)
     @JsonIgnoreProperties("project")
-
     private List<Task> tasks = new ArrayList<>();
 
-    public Project() {
-    }
+    // ===== ASSOCIATION PROJET ↔ ÉQUIPE =====
+    @ManyToOne
+    @JoinColumn(name = "team_id")
+    @JsonIgnoreProperties("users")
+    private Team team;
 
-    public Project(String titre,
-                   String description,
-                   LocalDate dateDebut,
-                   LocalDate dateFin,
-                   String statut,
-                   String priorite) {
+    public Project() {}
 
-        this.titre = titre;
-        this.description = description;
-        this.dateDebut = dateDebut;
-        this.dateFin = dateFin;
-        this.statut = statut;
-        this.priorite = priorite;
-    }
+    public Long getId() { return id; }
 
-    public Long getId() {
-        return id;
-    }
+    public String getTitre() { return titre; }
+    public void setTitre(String titre) { this.titre = titre; }
 
-    public String getTitre() {
-        return titre;
-    }
+    public String getDescription() { return description; }
+    public void setDescription(String description) { this.description = description; }
 
-    public void setTitre(String titre) {
-        this.titre = titre;
-    }
+    public LocalDate getDateDebut() { return dateDebut; }
+    public void setDateDebut(LocalDate dateDebut) { this.dateDebut = dateDebut; }
 
-    public String getDescription() {
-        return description;
-    }
+    public LocalDate getDateFin() { return dateFin; }
+    public void setDateFin(LocalDate dateFin) { this.dateFin = dateFin; }
 
-    public void setDescription(String description) {
-        this.description = description;
-    }
+    public String getStatut() { return statut; }
+    public void setStatut(String statut) { this.statut = statut; }
 
-    public LocalDate getDateDebut() {
-        return dateDebut;
-    }
+    public String getPriorite() { return priorite; }
+    public void setPriorite(String priorite) { this.priorite = priorite; }
 
-    public void setDateDebut(LocalDate dateDebut) {
-        this.dateDebut = dateDebut;
-    }
+    public List<Task> getTasks() { return tasks; }
+    public void setTasks(List<Task> tasks) { this.tasks = tasks; }
 
-    public LocalDate getDateFin() {
-        return dateFin;
-    }
-
-    public void setDateFin(LocalDate dateFin) {
-        this.dateFin = dateFin;
-    }
-
-    public String getStatut() {
-        return statut;
-    }
-
-    public void setStatut(String statut) {
-        this.statut = statut;
-    }
-
-    public String getPriorite() {
-        return priorite;
-    }
-
-    public void setPriorite(String priorite) {
-        this.priorite = priorite;
-    }
-
-    public List<Task> getTasks() {
-        return tasks;
-    }
-
-    public void setTasks(List<Task> tasks) {
-        this.tasks = tasks;
-    }
+    public Team getTeam() { return team; }
+    public void setTeam(Team team) { this.team = team; }
 }

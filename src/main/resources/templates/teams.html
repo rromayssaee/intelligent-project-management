@@ -323,10 +323,14 @@
             document.getElementById("currentMembers").innerHTML = members.map(u => `
                 <div class="member-row">
                     <div class="member-avatar-sm">${u.nom.charAt(0).toUpperCase()}</div>
-                    <div>
+                    <div class="flex-grow-1">
                         <div class="fw-semibold">${u.nom}</div>
                         <div class="text-muted small">${u.email} · ${u.role}</div>
                     </div>
+                    <button class="btn-remove-member" onclick="removeMember(${teamId}, ${u.id})"
+                            title="Retirer ce membre">
+                        <i class="bi bi-person-dash-fill"></i>
+                    </button>
                 </div>
             `).join("");
         }
@@ -442,6 +446,24 @@
             })
             .catch(err => {
                 console.error("Erreur chargement utilisateurs:", err);
+            });
+    }
+
+    // ===== RETIRER MEMBRE =====
+    function removeMember(teamId, userId) {
+        if (!confirm("Retirer ce membre de l'équipe ?")) return;
+
+        fetch(`/api/teams/${teamId}/users/${userId}`, {
+            method: "DELETE",
+            headers: { "Authorization": "Bearer " + token }
+        })
+            .then(r => {
+                if (r.ok) {
+                    closeModal("membersModal");
+                    loadTeams();
+                } else {
+                    alert("Erreur lors de la suppression du membre");
+                }
             });
     }
 

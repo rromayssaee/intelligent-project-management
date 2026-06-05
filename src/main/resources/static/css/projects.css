@@ -280,3 +280,15 @@ body {
     .projects-grid  { grid-template-columns: 1fr; }
     .top-actions    { flex-direction: column; }
 }
+
+/* ===== TEAM BADGE IN PROJECT CARD ===== */
+.team-badge-project {
+    display: inline-flex;
+    align-items: center;
+    background: #ede9fe;
+    color: #7c3aed;
+    padding: 5px 12px;
+    border-radius: 999px;
+    font-size: 13px;
+    font-weight: 600;
+}

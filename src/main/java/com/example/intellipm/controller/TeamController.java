@@ -37,15 +37,19 @@ public class TeamController {
     }
 
     @DeleteMapping("/{id}")
-    public String supprimerTeam(@PathVariable Long id) {
+    public void supprimerTeam(@PathVariable Long id) {
         teamService.supprimerTeam(id);
-        return "Équipe supprimée avec succès";
     }
 
     @PutMapping("/{teamId}/users/{userId}")
     public Team ajouterUtilisateurEquipe(@PathVariable Long teamId,
                                          @PathVariable Long userId) {
-
         return teamService.ajouterUtilisateurEquipe(teamId, userId);
+    }
+
+    @DeleteMapping("/{teamId}/users/{userId}")
+    public Team retirerUtilisateurEquipe(@PathVariable Long teamId,
+                                         @PathVariable Long userId) {
+        return teamService.retirerUtilisateurEquipe(teamId, userId);
     }
 }
