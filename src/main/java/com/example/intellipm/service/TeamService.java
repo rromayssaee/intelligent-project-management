@@ -3,6 +3,7 @@ package com.example.intellipm.service;
 import com.example.intellipm.entity.Team;
 import com.example.intellipm.entity.User;
 import com.example.intellipm.exception.ResourceNotFoundException;
+import com.example.intellipm.repository.TaskRepository;
 import com.example.intellipm.repository.TeamRepository;
 import com.example.intellipm.repository.UserRepository;
 import org.springframework.stereotype.Service;
@@ -16,10 +17,14 @@ public class TeamService {
     private final TeamRepository teamRepository;
     private final UserRepository userRepository;
 
+    private final TaskRepository taskRepository;
+
     public TeamService(TeamRepository teamRepository,
-                       UserRepository userRepository) {
+                       UserRepository userRepository,
+                       TaskRepository taskRepository) {
         this.teamRepository = teamRepository;
         this.userRepository = userRepository;
+        this.taskRepository = taskRepository;
     }
 
     public Team ajouterTeam(Team team) {
@@ -73,6 +78,10 @@ public class TeamService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("Utilisateur introuvable"));
 
+        // Désassigner toutes les tâches du membre dans les projets de cette équipe
+        taskRepository.desassignerTachesUserDansEquipe(userId, teamId);
+
+        // Retirer le membre de l'équipe
         user.getTeams().remove(team);
         userRepository.save(user);
 

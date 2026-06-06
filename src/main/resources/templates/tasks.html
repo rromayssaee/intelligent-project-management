@@ -236,7 +236,13 @@
     const role  = localStorage.getItem("role");
 
     // Rediriger si pas connecté
-    if (!token) window.location.href = "/login";
+    // Verifier expiration session (8 heures)
+    const loginTime = parseInt(localStorage.getItem("loginTime") || "0");
+    const SESSION_DURATION = 5 * 60 * 1000;
+    if (!token || (Date.now() - loginTime) > SESSION_DURATION) {
+        localStorage.clear();
+        window.location.href = "/login";
+    }
 
     // Afficher le rôle
     document.getElementById("roleInfo").innerText = "Connecté : " + role;

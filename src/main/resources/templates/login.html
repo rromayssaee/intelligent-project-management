@@ -70,8 +70,14 @@
 
 <script>
 
-    if(localStorage.getItem("token")){
-        window.location.href="/dashboard";
+    // Rediriger vers dashboard seulement si session valide
+    const token     = localStorage.getItem("token");
+    const loginTime = parseInt(localStorage.getItem("loginTime") || "0");
+    const SESSION_DURATION = 5 * 60 * 1000; // 5 min
+    if (token && (Date.now() - loginTime) < SESSION_DURATION) {
+        window.location.href = "/dashboard";
+    } else {
+        localStorage.clear(); // Nettoyer session expirée
     }
 
     document.getElementById("loginForm")
@@ -103,23 +109,15 @@
 
             if(response.ok){
 
-                const data =
-                    await response.json();
+                const data = await response.json();
 
-                localStorage.setItem(
-                    "token",
-                    data.token
-                );
-
+                localStorage.setItem("token", data.token);
                 localStorage.setItem("role", data.role || "MEMBRE");
+                localStorage.setItem("email", data.email);
+                // Stocker l'heure de connexion pour expiration
+                localStorage.setItem("loginTime", Date.now().toString());
 
-                localStorage.setItem(
-                    "email",
-                    data.email
-                );
-
-                window.location.href =
-                    "/dashboard";
+                window.location.href = "/dashboard";
 
             }else{
 
