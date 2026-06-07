@@ -92,6 +92,22 @@ public class TaskService {
     public Task modifierStatut(Long id, String statut) {
         Task task = afficherTaskParId(id);
         task.setStatut(statut);
-        return taskRepository.save(task);
+        Task saved = taskRepository.save(task);
+
+        // Vérifier si toutes les tâches du projet sont terminées
+        if ("TERMINEE".equals(statut) && saved.getProject() != null) {
+            Long projectId = saved.getProject().getId();
+            List<Task> allTasks = taskRepository.findByProjectId(projectId);
+            boolean allDone = !allTasks.isEmpty() &&
+                    allTasks.stream().allMatch(t -> "TERMINEE".equals(t.getStatut()));
+            if (allDone) {
+                projectRepository.findById(projectId).ifPresent(p -> {
+                    p.setStatut("TERMINE");
+                    projectRepository.save(p);
+                });
+            }
+        }
+
+        return saved;
     }
 }

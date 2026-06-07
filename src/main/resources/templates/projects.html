@@ -3,511 +3,453 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gestion des Projets – IntelliPM</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <title>IntelliPM — Projets</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="/css/projects.css">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg:#f4f6fb; --white:#fff; --sidebar:#1e2433;
+            --accent:#2563eb; --text:#0f172a; --muted:#64748b;
+            --border:#e2e8f0; --green:#16a34a; --amber:#d97706;
+            --red:#dc2626; --purple:#7c3aed; --sw:252px;
+        }
+        * { margin:0; padding:0; box-sizing:border-box; }
+        body { font-family:'Plus Jakarta Sans',sans-serif; background:var(--bg); color:var(--text); min-height:100vh; display:flex; }
+
+        /* SIDEBAR */
+        .sidebar { width:var(--sw); background:var(--sidebar); display:flex; flex-direction:column; position:fixed; top:0;left:0;bottom:0; z-index:100; }
+        .logo { padding:22px 20px; display:flex; align-items:center; gap:12px; border-bottom:1px solid rgba(255,255,255,.07); }
+        .logo-mark { width:36px;height:36px; background:var(--accent); border-radius:10px; display:flex;align-items:center;justify-content:center; font-size:18px;color:white;font-weight:800;flex-shrink:0; }
+        .logo-text { font-size:17px;font-weight:700;color:white;letter-spacing:-.3px; }
+        .logo-sub  { font-size:10px;color:rgba(255,255,255,.35);margin-top:1px; }
+        .nav { padding:16px 12px; flex:1; overflow-y:auto; }
+        .nav-label { font-size:10px;text-transform:uppercase;letter-spacing:1px;color:rgba(255,255,255,.25);font-weight:600;padding:0 10px;margin:16px 0 6px; }
+        .nav-label:first-child { margin-top:0; }
+        .nav-link { display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:8px;text-decoration:none;color:rgba(255,255,255,.5);font-size:13.5px;font-weight:500;transition:all .15s;margin-bottom:2px; }
+        .nav-link:hover { color:white;background:rgba(255,255,255,.06); }
+        .nav-link.active { color:white;background:var(--accent); }
+        .nav-link .bi { font-size:15px;width:18px;text-align:center; }
+        .nav-divider { height:1px;background:rgba(255,255,255,.07);margin:12px 0; }
+        .sidebar-bottom { padding:14px 12px;border-top:1px solid rgba(255,255,255,.07); }
+        .user-pill { display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:10px;background:rgba(255,255,255,.05);margin-bottom:8px; }
+        .u-avatar { width:32px;height:32px;border-radius:50%;background:var(--accent);color:white;font-size:13px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0; }
+        .u-name { font-size:13px;font-weight:600;color:white; }
+        .u-role { font-size:11px;color:rgba(255,255,255,.4); }
+        .btn-logout { width:100%;padding:9px;border-radius:8px;border:none;background:rgba(220,38,38,.12);color:#fca5a5;font-size:13px;font-weight:500;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:7px;transition:.15s;font-family:inherit; }
+        .btn-logout:hover { background:rgba(220,38,38,.22); }
+
+        /* MAIN */
+        .main { margin-left:var(--sw); flex:1; padding:30px 32px; }
+
+        /* TOPBAR */
+        .topbar { display:flex;justify-content:space-between;align-items:center;margin-bottom:24px; }
+        .page-title { font-size:24px;font-weight:800;letter-spacing:-.4px; }
+        .page-sub { font-size:14px;color:var(--muted);margin-top:3px; }
+        .btn-new { display:flex;align-items:center;gap:8px;padding:10px 18px;background:var(--accent);color:white;border:none;border-radius:10px;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit;transition:.15s; }
+        .btn-new:hover { background:#1d4ed8; }
+
+        /* STATS */
+        .stats-row { display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:24px; }
+        .stat { background:var(--white);border:1px solid var(--border);border-radius:12px;padding:18px 20px;box-shadow:0 1px 4px rgba(0,0,0,.04); }
+        .stat-num { font-size:30px;font-weight:800;letter-spacing:-1px;margin-bottom:2px; }
+        .stat-label { font-size:12px;color:var(--muted);font-weight:500; }
+        .s-blue   .stat-num { color:var(--accent); }
+        .s-amber  .stat-num { color:var(--amber); }
+        .s-green  .stat-num { color:var(--green); }
+        .s-purple .stat-num { color:var(--purple); }
+
+        /* FILTERS */
+        .filters { display:flex;gap:10px;margin-bottom:22px;flex-wrap:wrap; }
+        .filter-input { padding:9px 14px;border:1px solid var(--border);border-radius:9px;font-size:13px;font-family:inherit;background:var(--white);color:var(--text);transition:.15s; }
+        .filter-input:focus { outline:none;border-color:var(--accent); }
+
+        /* GRID */
+        .grid { display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:18px; }
+
+        /* PROJECT CARD */
+        .pcard { background:var(--white);border:1px solid var(--border);border-radius:16px;padding:22px;box-shadow:0 1px 4px rgba(0,0,0,.04);transition:box-shadow .2s,transform .2s;display:flex;flex-direction:column;gap:14px; }
+        .pcard:hover { box-shadow:0 6px 24px rgba(0,0,0,.09);transform:translateY(-3px); }
+        .pcard.late { border-left:4px solid var(--red); }
+
+        .pcard-top { display:flex;justify-content:space-between;align-items:flex-start;gap:10px; }
+        .pcard-title { font-size:16px;font-weight:700;color:var(--text);line-height:1.3; }
+        .badges { display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end; }
+
+        .badge { padding:4px 10px;border-radius:99px;font-size:11px;font-weight:600;white-space:nowrap; }
+        .b-progress  { background:#eff6ff;color:#2563eb; }
+        .b-planned   { background:#fef3c7;color:#d97706; }
+        .b-done      { background:#f0fdf4;color:#16a34a; }
+        .b-suspended { background:#fee2e2;color:#dc2626; }
+        .b-default   { background:#f1f5f9;color:#475569; }
+        .b-high      { background:#fee2e2;color:#dc2626; }
+        .b-medium    { background:#fef3c7;color:#d97706; }
+        .b-low       { background:#f0fdf4;color:#16a34a; }
+
+        .pcard-desc { font-size:13px;color:var(--muted);line-height:1.5; }
+
+        .pcard-dates { display:flex;align-items:center;gap:6px;font-size:12px;color:var(--muted); }
+        .date-late { color:var(--red);font-weight:700; }
+
+        .team-chip { display:inline-flex;align-items:center;gap:6px;background:#f5f3ff;color:#7c3aed;padding:5px 11px;border-radius:99px;font-size:12px;font-weight:600; }
+
+        .progress-wrap { display:flex;flex-direction:column;gap:5px; }
+        .progress-meta { display:flex;justify-content:space-between;font-size:12px;color:var(--muted); }
+        .progress-bar-bg { height:7px;background:#f1f5f9;border-radius:99px;overflow:hidden; }
+        .progress-bar-fill { height:100%;border-radius:99px;transition:width .6s; }
+
+        .pcard-actions { display:flex;gap:8px;flex-wrap:wrap;padding-top:12px;border-top:1px solid var(--border); }
+        .act-btn { display:inline-flex;align-items:center;gap:5px;padding:7px 13px;border-radius:8px;border:none;font-size:12px;font-weight:600;cursor:pointer;text-decoration:none;font-family:inherit;transition:.15s; }
+        .act-btn:hover { opacity:.85; }
+        .a-tasks  { background:#eff6ff;color:#2563eb; }
+        .a-edit   { background:#fef3c7;color:#d97706; }
+        .a-del    { background:#fee2e2;color:#dc2626; }
+
+        /* EMPTY */
+        .empty { text-align:center;padding:60px 20px;color:var(--muted); }
+        .empty i { font-size:48px;opacity:.3;display:block;margin-bottom:14px; }
+        .empty p { font-size:15px;font-weight:500; }
+
+        /* MODAL */
+        .overlay { display:none;position:fixed;inset:0;background:rgba(15,23,42,.45);z-index:1000;align-items:center;justify-content:center;padding:20px; }
+        .modal { background:var(--white);border-radius:18px;width:100%;max-width:540px;box-shadow:0 20px 60px rgba(0,0,0,.18);overflow:hidden; }
+        .modal-head { display:flex;justify-content:space-between;align-items:center;padding:20px 24px;background:#f8fafc;border-bottom:1px solid var(--border); }
+        .modal-head h5 { font-size:16px;font-weight:700; }
+        .btn-x { background:none;border:none;cursor:pointer;font-size:18px;color:var(--muted);padding:4px 8px;border-radius:8px; }
+        .btn-x:hover { background:var(--border); }
+        .modal-body { padding:24px; }
+        .field { margin-bottom:16px; }
+        .field label { display:block;font-size:13px;font-weight:600;margin-bottom:6px; }
+        .field input, .field select, .field textarea { width:100%;padding:10px 12px;border:1px solid var(--border);border-radius:9px;font-size:13px;font-family:inherit;color:var(--text);transition:.15s; }
+        .field input:focus, .field select:focus, .field textarea:focus { outline:none;border-color:var(--accent); }
+        .row2 { display:grid;grid-template-columns:1fr 1fr;gap:12px; }
+        .modal-footer { display:flex;gap:8px;justify-content:flex-end;margin-top:20px; }
+        .btn-cancel { padding:9px 18px;border:1px solid var(--border);border-radius:9px;background:var(--white);font-size:13px;font-weight:600;cursor:pointer;font-family:inherit; }
+        .btn-save   { padding:9px 22px;border:none;border-radius:9px;background:var(--accent);color:white;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;transition:.15s; }
+        .btn-save:hover { background:#1d4ed8; }
+        .btn-update { padding:9px 22px;border:none;border-radius:9px;background:var(--amber);color:white;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;transition:.15s; }
+    </style>
 </head>
 <body>
 
-<!-- ===== MODAL AJOUTER ===== -->
-<div class="modal-overlay" id="addModal">
-    <div class="modal-card">
-        <div class="modal-header-custom">
-            <h5><i class="bi bi-plus-circle-fill me-2"></i>Nouveau Projet</h5>
-            <button class="btn-close-modal" onclick="closeModal('addModal')"><i class="bi bi-x-lg"></i></button>
+<!-- MODAL AJOUTER -->
+<div class="overlay" id="addModal">
+    <div class="modal">
+        <div class="modal-head">
+            <h5><i class="bi bi-plus-circle-fill" style="color:var(--accent)"></i> Nouveau Projet</h5>
+            <button class="btn-x" onclick="closeModal('addModal')"><i class="bi bi-x-lg"></i></button>
         </div>
-        <div class="modal-body-custom">
-            <div class="mb-3">
-                <label class="form-label fw-semibold">Titre *</label>
-                <input type="text" id="titre" class="form-control" placeholder="Nom du projet">
-            </div>
-            <div class="mb-3">
-                <label class="form-label fw-semibold">Description</label>
-                <textarea id="description" class="form-control" rows="3" placeholder="Description du projet..."></textarea>
-            </div>
-            <div class="row">
-                <div class="col-md-6 mb-3">
-                    <label class="form-label fw-semibold">Statut</label>
-                    <select id="statut" class="form-select">
+        <div class="modal-body">
+            <div class="field"><label>Titre *</label><input type="text" id="titre" placeholder="Nom du projet"></div>
+            <div class="field"><label>Description</label><textarea id="description" rows="3" placeholder="Description..."></textarea></div>
+            <div class="row2">
+                <div class="field"><label>Statut</label>
+                    <select id="statut">
                         <option value="EN_COURS">En cours</option>
                         <option value="PLANIFIE">Planifié</option>
                         <option value="TERMINE">Terminé</option>
                         <option value="SUSPENDU">Suspendu</option>
                     </select>
                 </div>
-                <div class="col-md-6 mb-3">
-                    <label class="form-label fw-semibold">Priorité</label>
-                    <select id="priorite" class="form-select">
+                <div class="field"><label>Priorité</label>
+                    <select id="priorite">
                         <option value="MOYENNE">Moyenne</option>
                         <option value="HAUTE">Haute</option>
                         <option value="FAIBLE">Faible</option>
                     </select>
                 </div>
             </div>
-            <div class="row">
-                <div class="col-md-6 mb-3">
-                    <label class="form-label fw-semibold">Date début *</label>
-                    <input type="date" id="dateDebut" class="form-control">
-                </div>
-                <div class="col-md-6 mb-3">
-                    <label class="form-label fw-semibold">Date fin *</label>
-                    <input type="date" id="dateFin" class="form-control">
-                </div>
+            <div class="row2">
+                <div class="field"><label>Date début</label><input type="date" id="dateDebut"></div>
+                <div class="field"><label>Date fin</label><input type="date" id="dateFin"></div>
             </div>
-            <div class="mb-3">
-                <label class="form-label fw-semibold">Équipe associée</label>
-                <select id="teamId" class="form-select">
-                    <option value="">-- Aucune équipe --</option>
-                </select>
-            </div>
-            <div class="d-flex gap-2 justify-content-end">
-                <button class="btn btn-light" onclick="closeModal('addModal')">Annuler</button>
-                <button class="btn btn-primary px-4" onclick="addProject()">
-                    <i class="bi bi-save me-1"></i>Enregistrer
-                </button>
+            <div class="field"><label>Équipe associée</label><select id="teamId"><option value="">-- Aucune équipe --</option></select></div>
+            <div class="modal-footer">
+                <button class="btn-cancel" onclick="closeModal('addModal')">Annuler</button>
+                <button class="btn-save" onclick="addProject()"><i class="bi bi-save me-1"></i>Enregistrer</button>
             </div>
         </div>
     </div>
 </div>
 
-<!-- ===== MODAL MODIFIER ===== -->
-<div class="modal-overlay" id="editModal">
-    <div class="modal-card">
-        <div class="modal-header-custom">
-            <h5><i class="bi bi-pencil-fill me-2"></i>Modifier le Projet</h5>
-            <button class="btn-close-modal" onclick="closeModal('editModal')"><i class="bi bi-x-lg"></i></button>
+<!-- MODAL MODIFIER -->
+<div class="overlay" id="editModal">
+    <div class="modal">
+        <div class="modal-head">
+            <h5><i class="bi bi-pencil-fill" style="color:var(--amber)"></i> Modifier le Projet</h5>
+            <button class="btn-x" onclick="closeModal('editModal')"><i class="bi bi-x-lg"></i></button>
         </div>
-        <div class="modal-body-custom">
+        <div class="modal-body">
             <input type="hidden" id="editId">
-            <div class="mb-3">
-                <label class="form-label fw-semibold">Titre *</label>
-                <input type="text" id="editTitre" class="form-control">
-            </div>
-            <div class="mb-3">
-                <label class="form-label fw-semibold">Description</label>
-                <textarea id="editDescription" class="form-control" rows="3"></textarea>
-            </div>
-            <div class="row">
-                <div class="col-md-6 mb-3">
-                    <label class="form-label fw-semibold">Statut</label>
-                    <select id="editStatut" class="form-select">
+            <div class="field"><label>Titre *</label><input type="text" id="editTitre"></div>
+            <div class="field"><label>Description</label><textarea id="editDescription" rows="3"></textarea></div>
+            <div class="row2">
+                <div class="field"><label>Statut</label>
+                    <select id="editStatut">
                         <option value="EN_COURS">En cours</option>
                         <option value="PLANIFIE">Planifié</option>
                         <option value="TERMINE">Terminé</option>
                         <option value="SUSPENDU">Suspendu</option>
                     </select>
                 </div>
-                <div class="col-md-6 mb-3">
-                    <label class="form-label fw-semibold">Priorité</label>
-                    <select id="editPriorite" class="form-select">
+                <div class="field"><label>Priorité</label>
+                    <select id="editPriorite">
                         <option value="MOYENNE">Moyenne</option>
                         <option value="HAUTE">Haute</option>
                         <option value="FAIBLE">Faible</option>
                     </select>
                 </div>
             </div>
-            <div class="row">
-                <div class="col-md-6 mb-3">
-                    <label class="form-label fw-semibold">Date début *</label>
-                    <input type="date" id="editDateDebut" class="form-control">
-                </div>
-                <div class="col-md-6 mb-3">
-                    <label class="form-label fw-semibold">Date fin *</label>
-                    <input type="date" id="editDateFin" class="form-control">
-                </div>
+            <div class="row2">
+                <div class="field"><label>Date début</label><input type="date" id="editDateDebut"></div>
+                <div class="field"><label>Date fin</label><input type="date" id="editDateFin"></div>
             </div>
-            <div class="mb-3">
-                <label class="form-label fw-semibold">Équipe associée</label>
-                <select id="editTeamId" class="form-select">
-                    <option value="">-- Aucune équipe --</option>
-                </select>
-            </div>
-            <div class="d-flex gap-2 justify-content-end">
-                <button class="btn btn-light" onclick="closeModal('editModal')">Annuler</button>
-                <button class="btn btn-warning px-4" onclick="updateProject()">
-                    <i class="bi bi-save me-1"></i>Mettre à jour
-                </button>
+            <div class="field"><label>Équipe associée</label><select id="editTeamId"><option value="">-- Aucune équipe --</option></select></div>
+            <div class="modal-footer">
+                <button class="btn-cancel" onclick="closeModal('editModal')">Annuler</button>
+                <button class="btn-update" onclick="updateProject()"><i class="bi bi-save me-1"></i>Mettre à jour</button>
             </div>
         </div>
     </div>
 </div>
 
-<!-- ===== PAGE ===== -->
-<div class="container py-5">
-
-    <!-- Header -->
-    <div class="page-header">
-        <div>
-            <h1 class="page-title">📁 Gestion des Projets</h1>
-            <p class="page-subtitle">Gérez vos projets et suivez leur avancement</p>
+<!-- SIDEBAR -->
+<aside class="sidebar">
+    <div class="logo">
+        <div class="logo-mark">I</div>
+        <div><div class="logo-text">IntelliPM</div><div class="logo-sub">Project Management</div></div>
+    </div>
+    <nav class="nav">
+        <div class="nav-label">Principal</div>
+        <a href="/dashboard" class="nav-link"><i class="bi bi-grid-fill"></i> Dashboard</a>
+        <a href="/projects"  class="nav-link active"><i class="bi bi-folder-fill"></i> Projets</a>
+        <a href="/teams"     class="nav-link" id="teamsBtn"><i class="bi bi-people-fill"></i> Équipes</a>
+        <div class="nav-divider" id="adminDivider"></div>
+        <div class="nav-label" id="adminLabel">Admin</div>
+        <a href="/users"     class="nav-link" id="usersBtn"><i class="bi bi-person-fill"></i> Utilisateurs</a>
+    </nav>
+    <div class="sidebar-bottom">
+        <div class="user-pill">
+            <div class="u-avatar" id="uAvatar">?</div>
+            <div><div class="u-name" id="uName">—</div><div class="u-role" id="uRole">—</div></div>
         </div>
-        <div class="role-badge" id="roleInfo"></div>
+        <button class="btn-logout" onclick="logout()"><i class="bi bi-box-arrow-right"></i> Déconnexion</button>
+    </div>
+</aside>
+
+<!-- MAIN -->
+<main class="main">
+    <div class="topbar">
+        <div>
+            <div class="page-title">Projets</div>
+            <div class="page-sub">Gérez vos projets et suivez leur avancement</div>
+        </div>
+        <button class="btn-new" id="addProjectBtn" onclick="openModal('addModal')">
+            <i class="bi bi-plus-lg"></i> Nouveau projet
+        </button>
     </div>
 
     <!-- Stats -->
     <div class="stats-row">
-        <div class="stat-box stat-total">
-            <div class="stat-number" id="statTotal">0</div>
-            <div class="stat-label">Total</div>
-        </div>
-        <div class="stat-box stat-progress">
-            <div class="stat-number" id="statEnCours">0</div>
-            <div class="stat-label">En cours</div>
-        </div>
-        <div class="stat-box stat-done">
-            <div class="stat-number" id="statTermines">0</div>
-            <div class="stat-label">Terminés</div>
-        </div>
-        <div class="stat-box stat-planned">
-            <div class="stat-number" id="statPlanifies">0</div>
-            <div class="stat-label">Planifiés</div>
-        </div>
-    </div>
-
-    <!-- Actions -->
-    <div class="top-actions">
-        <button id="addProjectBtn" class="btn btn-add btn-modern" onclick="openModal('addModal')">
-            <i class="bi bi-plus-lg me-1"></i>Nouveau Projet
-        </button>
-        <a href="/dashboard" class="btn btn-dashboard btn-modern">
-            <i class="bi bi-house me-1"></i>Dashboard
-        </a>
-        <button class="btn btn-danger btn-modern" onclick="logout()">
-            <i class="bi bi-box-arrow-right me-1"></i>Déconnexion
-        </button>
+        <div class="stat s-blue"><div class="stat-num" id="sTotal">0</div><div class="stat-label">Total</div></div>
+        <div class="stat s-amber"><div class="stat-num" id="sEnCours">0</div><div class="stat-label">En cours</div></div>
+        <div class="stat s-green"><div class="stat-num" id="sTermines">0</div><div class="stat-label">Terminés</div></div>
+        <div class="stat s-purple"><div class="stat-num" id="sPlanifies">0</div><div class="stat-label">Planifiés</div></div>
     </div>
 
     <!-- Filtres -->
-    <div class="filters-bar">
-        <select id="filterStatut" class="form-select filter-select" onchange="filterProjects()">
+    <div class="filters">
+        <select class="filter-input" id="filterStatut" onchange="filterProjects()" style="min-width:160px;">
             <option value="">Tous les statuts</option>
             <option value="EN_COURS">En cours</option>
             <option value="PLANIFIE">Planifié</option>
             <option value="TERMINE">Terminé</option>
             <option value="SUSPENDU">Suspendu</option>
         </select>
-        <select id="filterPriorite" class="form-select filter-select" onchange="filterProjects()">
+        <select class="filter-input" id="filterPriorite" onchange="filterProjects()" style="min-width:160px;">
             <option value="">Toutes les priorités</option>
             <option value="HAUTE">Haute</option>
             <option value="MOYENNE">Moyenne</option>
             <option value="FAIBLE">Faible</option>
         </select>
-        <input type="text" id="searchProject" class="form-control filter-select"
-               placeholder="🔍 Rechercher un projet..." oninput="filterProjects()">
+        <input class="filter-input" id="searchProject" placeholder="🔍 Rechercher..." oninput="filterProjects()" style="flex:1;min-width:200px;">
     </div>
 
-    <!-- Cards projets -->
-    <div id="projectsGrid" class="projects-grid">
-        <div class="text-center text-muted py-5">
-            <i class="bi bi-hourglass-split fs-3 d-block mb-2"></i>Chargement...
-        </div>
+    <!-- Grid -->
+    <div class="grid" id="projectsGrid">
+        <div class="empty"><i class="bi bi-hourglass-split"></i><p>Chargement...</p></div>
     </div>
-
-</div>
+</main>
 
 <script>
     const token = localStorage.getItem("token");
     const role  = localStorage.getItem("role");
-
-    // Verifier expiration session (8 heures)
+    const email = localStorage.getItem("email") || "";
     const loginTime = parseInt(localStorage.getItem("loginTime") || "0");
-    const SESSION_DURATION = 5 * 60 * 1000;
-    if (!token || (Date.now() - loginTime) > SESSION_DURATION) {
-        localStorage.clear();
-        window.location.href = "/login";
+
+    if (!token || (Date.now() - loginTime) > 8*60*60*1000) { localStorage.clear(); window.location.href="/login"; }
+
+    // Sidebar user
+    const name = email.split("@")[0] || "Utilisateur";
+    document.getElementById("uAvatar").innerText = name.charAt(0).toUpperCase();
+    document.getElementById("uName").innerText   = name;
+    document.getElementById("uRole").innerText   = role || "—";
+
+    // Permissions sidebar
+    if (role !== "ADMIN") {
+        document.getElementById("usersBtn").style.display      = "none";
+        document.getElementById("adminLabel").style.display    = "none";
+        document.getElementById("adminDivider").style.display  = "none";
     }
-
-    document.getElementById("roleInfo").innerText = "Connecté : " + role;
-
     if (role === "MEMBRE") {
+        document.getElementById("teamsBtn").style.display      = "none";
         document.getElementById("addProjectBtn").style.display = "none";
     }
 
-    let allProjects = [];
-    let allTeams    = [];
+    let allProjects = [], allTeams = [];
 
-    // ===== CHARGER ÉQUIPES =====
+    // CHARGER ÉQUIPES
     function loadTeams() {
-        fetch("/api/teams", {
-            headers: { "Authorization": "Bearer " + token }
-        })
-            .then(r => r.json())
-            .then(teams => {
-                allTeams = teams;
-                const options = `<option value="">-- Aucune équipe --</option>` +
-                    teams.map(t => `<option value="${t.id}">${t.nom}</option>`).join("");
-                document.getElementById("teamId").innerHTML     = options;
-                document.getElementById("editTeamId").innerHTML = options;
-            })
-            .catch(() => {});
+        fetch("/api/teams", { headers: { "Authorization": "Bearer " + token } })
+            .then(r => r.json()).then(teams => {
+            allTeams = teams;
+            const opts = `<option value="">-- Aucune équipe --</option>` + teams.map(t => `<option value="${t.id}">${t.nom}</option>`).join("");
+            document.getElementById("teamId").innerHTML = opts;
+            document.getElementById("editTeamId").innerHTML = opts;
+        }).catch(()=>{});
     }
 
-    // ===== CHARGER =====
+    // CHARGER PROJETS
     function loadProjects() {
-        fetch("/api/projects", {
-            headers: { "Authorization": "Bearer " + token }
-        })
-            .then(r => r.json())
-            .then(projects => {
-                allProjects = projects;
-                updateStats(projects);
-                renderProjects(projects);
-            })
-            .catch(() => {
-                document.getElementById("projectsGrid").innerHTML =
-                    `<div class="text-center text-danger py-5">Erreur de chargement</div>`;
-            });
+        fetch("/api/projects", { headers: { "Authorization": "Bearer " + token } })
+            .then(r => r.json()).then(projects => {
+            allProjects = projects;
+            updateStats(projects);
+            renderProjects(projects);
+        }).catch(() => {
+            document.getElementById("projectsGrid").innerHTML = `<div class="empty"><i class="bi bi-exclamation-triangle"></i><p>Erreur de chargement</p></div>`;
+        });
     }
 
-    // ===== STATS =====
-    function updateStats(projects) {
-        document.getElementById("statTotal").innerText    = projects.length;
-        document.getElementById("statEnCours").innerText  = projects.filter(p => p.statut === "EN_COURS").length;
-        document.getElementById("statTermines").innerText = projects.filter(p => p.statut === "TERMINE").length;
-        document.getElementById("statPlanifies").innerText = projects.filter(p => p.statut === "PLANIFIE").length;
+    function updateStats(p) {
+        document.getElementById("sTotal").innerText    = p.length;
+        document.getElementById("sEnCours").innerText  = p.filter(x=>x.statut==="EN_COURS").length;
+        document.getElementById("sTermines").innerText = p.filter(x=>x.statut==="TERMINE").length;
+        document.getElementById("sPlanifies").innerText= p.filter(x=>x.statut==="PLANIFIE").length;
     }
 
-    // ===== RENDER CARDS =====
     function renderProjects(projects) {
-        if (projects.length === 0) {
-            document.getElementById("projectsGrid").innerHTML =
-                `<div class="text-center text-muted py-5 w-100">
-                    <i class="bi bi-folder2-open fs-2 d-block mb-2"></i>
-                    Aucun projet trouvé
-                 </div>`;
+        if (!projects.length) {
+            document.getElementById("projectsGrid").innerHTML = `<div class="empty" style="grid-column:1/-1"><i class="bi bi-folder2-open"></i><p>Aucun projet trouvé</p></div>`;
             return;
         }
-
         const today = new Date().toISOString().split("T")[0];
-        let html = "";
-
-        projects.forEach(p => {
-            const isLate = p.dateFin && p.dateFin < today && p.statut !== "TERMINE";
-            const tasksCount = p.tasks ? p.tasks.length : 0;
-            const doneCount  = p.tasks ? p.tasks.filter(t => t.statut === "TERMINEE").length : 0;
-            const progress   = tasksCount > 0 ? Math.round((doneCount / tasksCount) * 100) : 0;
-
-            html += `
-<div class="project-card ${isLate ? 'card-late' : ''}">
-    <div class="project-card-header">
-        <div class="project-title">${p.titre}</div>
-        <div class="project-badges">
-            ${badgeStatut(p.statut)}
-            ${badgePriorite(p.priorite)}
-        </div>
+        document.getElementById("projectsGrid").innerHTML = projects.map(p => {
+            const isLate    = p.dateFin && p.dateFin < today && p.statut !== "TERMINE";
+            const taskCount = p.tasks ? p.tasks.length : 0;
+            const doneCount = p.tasks ? p.tasks.filter(t=>t.statut==="TERMINEE").length : 0;
+            const pct       = taskCount > 0 ? Math.round((doneCount/taskCount)*100) : 0;
+            const barColor  = pct===100 ? "#16a34a" : "#2563eb";
+            return `
+<div class="pcard ${isLate?'late':''}">
+    <div class="pcard-top">
+        <div class="pcard-title">${p.titre}</div>
+        <div class="badges">${badgeStatut(p.statut)}${badgePrio(p.priorite)}</div>
     </div>
-
-    <p class="project-description">${p.description || '<span class="text-muted fst-italic">Aucune description</span>'}</p>
-
-    <div class="project-dates">
-        <span><i class="bi bi-calendar-event me-1"></i>${p.dateDebut || "—"}</span>
-        <i class="bi bi-arrow-right mx-2 text-muted"></i>
-        <span class="${isLate ? 'text-danger fw-bold' : ''}">${p.dateFin || "—"}${isLate ? ' <i class="bi bi-alarm"></i>' : ''}</span>
+    <div class="pcard-desc">${p.description || '<em style="opacity:.5">Aucune description</em>'}</div>
+    <div class="pcard-dates">
+        <i class="bi bi-calendar3"></i>
+        <span>${p.dateDebut||"—"}</span>
+        <i class="bi bi-arrow-right" style="opacity:.4"></i>
+        <span class="${isLate?'date-late':''}">${p.dateFin||"—"}${isLate?' <i class="bi bi-alarm"></i>':''}</span>
     </div>
-
-    ${p.team ? `
-    <div class="team-badge-project">
-        <i class="bi bi-people-fill me-1"></i>${p.team.nom}
-    </div>` : ''}
-
-    <div class="progress-section">
-        <div class="d-flex justify-content-between mb-1">
-            <small class="text-muted">Avancement</small>
-            <small class="fw-bold">${progress}%</small>
-        </div>
-        <div class="progress" style="height:8px;border-radius:999px;">
-            <div class="progress-bar ${progress === 100 ? 'bg-success' : 'bg-primary'}"
-                 style="width:${progress}%;border-radius:999px;"></div>
-        </div>
-        <small class="text-muted">${doneCount}/${tasksCount} tâches terminées</small>
+    ${p.team ? `<div class="team-chip"><i class="bi bi-people-fill"></i>${p.team.nom}</div>` : ''}
+    <div class="progress-wrap">
+        <div class="progress-meta"><span>Avancement</span><strong>${pct}%</strong></div>
+        <div class="progress-bar-bg"><div class="progress-bar-fill" style="width:${pct}%;background:${barColor}"></div></div>
+        <div style="font-size:11px;color:var(--muted)">${doneCount}/${taskCount} tâches terminées</div>
     </div>
-
-    <div class="project-actions">
-        <a href="/tasks?projectId=${p.id}" class="btn-action btn-tasks">
-            <i class="bi bi-list-check me-1"></i>Tâches
-        </a>
-        ${role !== "MEMBRE" ? `
-        <button class="btn-action btn-edit" onclick="editProject(${p.id})">
-            <i class="bi bi-pencil me-1"></i>Modifier
-        </button>
-        <button class="btn-action btn-pdf" onclick="downloadPdf(${p.id})">
-            <i class="bi bi-file-pdf me-1"></i>PDF
-        </button>
-        <button class="btn-action btn-delete" onclick="deleteProject(${p.id})">
-            <i class="bi bi-trash"></i>
-        </button>
-        ` : ''}
+    <div class="pcard-actions">
+        <a href="/tasks?projectId=${p.id}" class="act-btn a-tasks"><i class="bi bi-list-check"></i> Tâches</a>
+        ${role!=="MEMBRE"?`
+        <button class="act-btn a-edit" onclick="editProject(${p.id})"><i class="bi bi-pencil"></i> Modifier</button>
+        <button class="act-btn a-del"  onclick="deleteProject(${p.id})"><i class="bi bi-trash"></i></button>
+        `:''}
     </div>
 </div>`;
-        });
-
-        document.getElementById("projectsGrid").innerHTML = html;
+        }).join("");
     }
 
-    // ===== BADGES =====
     function badgeStatut(s) {
-        const map = {
-            "EN_COURS": ["badge-progress", "En cours"],
-            "PLANIFIE":  ["badge-planned",  "Planifié"],
-            "TERMINE":   ["badge-done",     "Terminé"],
-            "SUSPENDU":  ["badge-suspended","Suspendu"],
-        };
-        const [cls, label] = map[s] || ["badge-default", s || "—"];
-        return `<span class="proj-badge ${cls}">${label}</span>`;
+        const m = { EN_COURS:["b-progress","En cours"], PLANIFIE:["b-planned","Planifié"], TERMINE:["b-done","Terminé"], SUSPENDU:["b-suspended","Suspendu"] };
+        const [c,l] = m[s]||["b-default",s||"—"];
+        return `<span class="badge ${c}">${l}</span>`;
     }
 
-    function badgePriorite(p) {
-        const map = {
-            "HAUTE":   ["badge-high",   "🔴 Haute"],
-            "MOYENNE": ["badge-medium", "🟡 Moyenne"],
-            "FAIBLE":  ["badge-low",    "🟢 Faible"],
-        };
-        const [cls, label] = map[p] || ["badge-default", p || "—"];
-        return `<span class="proj-badge ${cls}">${label}</span>`;
+    function badgePrio(p) {
+        const m = { HAUTE:["b-high","Haute"], MOYENNE:["b-medium","Moyenne"], FAIBLE:["b-low","Faible"] };
+        const [c,l] = m[p]||["b-default",p||"—"];
+        return `<span class="badge ${c}">${l}</span>`;
     }
 
-    // ===== FILTRES =====
     function filterProjects() {
-        const statut   = document.getElementById("filterStatut").value;
-        const priorite = document.getElementById("filterPriorite").value;
-        const search   = document.getElementById("searchProject").value.toLowerCase();
-
-        const filtered = allProjects.filter(p =>
-            (!statut   || p.statut   === statut)   &&
-            (!priorite || p.priorite === priorite) &&
-            (!search   || p.titre.toLowerCase().includes(search))
-        );
-
-        renderProjects(filtered);
+        const s = document.getElementById("filterStatut").value;
+        const p = document.getElementById("filterPriorite").value;
+        const q = document.getElementById("searchProject").value.toLowerCase();
+        renderProjects(allProjects.filter(x => (!s||x.statut===s) && (!p||x.priorite===p) && (!q||x.titre.toLowerCase().includes(q))));
     }
 
-    // ===== MODALS =====
-    function openModal(id)  { document.getElementById(id).style.display = "flex"; }
-    function closeModal(id) { document.getElementById(id).style.display = "none"; }
+    function openModal(id)  { document.getElementById(id).style.display="flex"; }
+    function closeModal(id) { document.getElementById(id).style.display="none"; }
+    document.querySelectorAll(".overlay").forEach(o => o.addEventListener("click",e=>{ if(e.target===o) closeModal(o.id); }));
 
-    document.querySelectorAll(".modal-overlay").forEach(o => {
-        o.addEventListener("click", e => { if (e.target === o) closeModal(o.id); });
-    });
-
-    // ===== AJOUTER =====
     function addProject() {
         const titre = document.getElementById("titre").value.trim();
         if (!titre) { alert("Le titre est obligatoire"); return; }
-
         fetch("/api/projects", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-                "Authorization": "Bearer " + token
-            },
-            body: JSON.stringify({
-                titre:       titre,
-                description: document.getElementById("description").value,
-                statut:      document.getElementById("statut").value,
-                priorite:    document.getElementById("priorite").value,
-                dateDebut:   document.getElementById("dateDebut").value || null,
-                dateFin:     document.getElementById("dateFin").value   || null,
-                team:        document.getElementById("teamId").value
-                    ? { id: parseInt(document.getElementById("teamId").value) }
-                    : null
-            })
-        })
-            .then(r => {
-                if (r.ok) { closeModal("addModal"); loadProjects(); }
-                else alert("Erreur lors de l'ajout");
-            });
+            method:"POST", headers:{"Content-Type":"application/json","Authorization":"Bearer "+token},
+            body: JSON.stringify({ titre, description:document.getElementById("description").value, statut:document.getElementById("statut").value, priorite:document.getElementById("priorite").value, dateDebut:document.getElementById("dateDebut").value||null, dateFin:document.getElementById("dateFin").value||null, team:document.getElementById("teamId").value?{id:parseInt(document.getElementById("teamId").value)}:null })
+        }).then(r=>{ if(r.ok){closeModal("addModal");loadProjects();}else alert("Erreur lors de l'ajout"); });
     }
 
-    // ===== MODIFIER =====
     function editProject(id) {
-        fetch("/api/projects/" + id, {
-            headers: { "Authorization": "Bearer " + token }
-        })
-            .then(r => r.json())
-            .then(p => {
-                document.getElementById("editId").value          = p.id;
-                document.getElementById("editTitre").value       = p.titre;
-                document.getElementById("editDescription").value = p.description || "";
-                document.getElementById("editStatut").value      = p.statut      || "EN_COURS";
-                document.getElementById("editPriorite").value    = p.priorite    || "MOYENNE";
-                document.getElementById("editDateDebut").value   = p.dateDebut   || "";
-                document.getElementById("editDateFin").value     = p.dateFin     || "";
-                document.getElementById("editTeamId").value      = p.team ? p.team.id : "";
-                openModal("editModal");
-            });
+        fetch("/api/projects/"+id, { headers:{"Authorization":"Bearer "+token} })
+            .then(r=>r.json()).then(p=>{
+            document.getElementById("editId").value          = p.id;
+            document.getElementById("editTitre").value       = p.titre;
+            document.getElementById("editDescription").value = p.description||"";
+            document.getElementById("editStatut").value      = p.statut||"EN_COURS";
+            document.getElementById("editPriorite").value    = p.priorite||"MOYENNE";
+            document.getElementById("editDateDebut").value   = p.dateDebut||"";
+            document.getElementById("editDateFin").value     = p.dateFin||"";
+            document.getElementById("editTeamId").value      = p.team?p.team.id:"";
+            openModal("editModal");
+        });
     }
 
     function updateProject() {
-        const id    = document.getElementById("editId").value;
-        const titre = document.getElementById("editTitre").value.trim();
-        if (!titre) { alert("Le titre est obligatoire"); return; }
-
-        fetch("/api/projects/" + id, {
-            method: "PUT",
-            headers: {
-                "Content-Type": "application/json",
-                "Authorization": "Bearer " + token
-            },
-            body: JSON.stringify({
-                titre:       titre,
-                description: document.getElementById("editDescription").value,
-                statut:      document.getElementById("editStatut").value,
-                priorite:    document.getElementById("editPriorite").value,
-                dateDebut:   document.getElementById("editDateDebut").value || null,
-                dateFin:     document.getElementById("editDateFin").value   || null,
-                team:        document.getElementById("editTeamId").value
-                    ? { id: parseInt(document.getElementById("editTeamId").value) }
-                    : null
-            })
-        })
-            .then(r => {
-                if (r.ok) { closeModal("editModal"); loadProjects(); }
-                else alert("Erreur lors de la modification");
-            });
+        const id=document.getElementById("editId").value, titre=document.getElementById("editTitre").value.trim();
+        if(!titre){alert("Le titre est obligatoire");return;}
+        fetch("/api/projects/"+id, {
+            method:"PUT", headers:{"Content-Type":"application/json","Authorization":"Bearer "+token},
+            body: JSON.stringify({ titre, description:document.getElementById("editDescription").value, statut:document.getElementById("editStatut").value, priorite:document.getElementById("editPriorite").value, dateDebut:document.getElementById("editDateDebut").value||null, dateFin:document.getElementById("editDateFin").value||null, team:document.getElementById("editTeamId").value?{id:parseInt(document.getElementById("editTeamId").value)}:null })
+        }).then(r=>{ if(r.ok){closeModal("editModal");loadProjects();}else alert("Erreur"); });
     }
 
-    // ===== SUPPRIMER =====
     function deleteProject(id) {
-        if (!confirm("Supprimer ce projet et toutes ses tâches ?")) return;
-
-        fetch("/api/projects/" + id, {
-            method: "DELETE",
-            headers: { "Authorization": "Bearer " + token }
-        })
-            .then(r => {
-                if (r.ok) loadProjects();
-                else alert("Erreur lors de la suppression");
-            });
+        if(!confirm("Supprimer ce projet et toutes ses tâches ?")) return;
+        fetch("/api/projects/"+id, { method:"DELETE", headers:{"Authorization":"Bearer "+token} })
+            .then(r=>{ if(r.ok) loadProjects(); else alert("Erreur"); });
     }
 
-    // ===== PDF =====
-    function downloadPdf(projectId) {
-        fetch(`/api/reports/project/${projectId}/pdf`, {
-            headers: { "Authorization": "Bearer " + token }
-        })
-            .then(r => r.blob())
-            .then(blob => {
-                const url = window.URL.createObjectURL(blob);
-                const a   = document.createElement("a");
-                a.href     = url;
-                a.download = `rapport-projet-${projectId}.pdf`;
-                document.body.appendChild(a);
-                a.click();
-                a.remove();
-            });
-    }
+    function logout() { localStorage.clear(); window.location.href="/login"; }
 
-    // ===== DECONNEXION =====
-    function logout() {
-        localStorage.clear();
-        window.location.href = "/login";
-    }
-
-    // ===== INIT =====
     loadTeams();
     loadProjects();
-</script>
 
+    // Ouvrir le modal si venant du dashboard
+    if (new URLSearchParams(window.location.search).get("new") === "1") {
+        setTimeout(() => openModal("addModal"), 500);
+    }
+</script>
 </body>
 </html>

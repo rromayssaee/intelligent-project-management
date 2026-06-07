@@ -399,6 +399,11 @@
 
     // ===== INIT =====
     loadUsers();
+
+    // Ouvrir le modal si venant du dashboard
+    if (new URLSearchParams(window.location.search).get("new") === "1") {
+        setTimeout(() => openModal("addModal"), 500);
+    }
 </script>
 
 </body>
