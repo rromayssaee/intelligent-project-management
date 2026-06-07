@@ -73,12 +73,11 @@ public class SecurityConfig {
                         .requestMatchers("/api/users/**")
                         .hasRole("ADMIN")
 
-                        // API TEAMS
+                        // API TEAMS — GET autorisé pour MEMBRE (voir son équipe)
+                        .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/teams", "/api/teams/**")
+                        .hasAnyRole("ADMIN", "CHEF_PROJET", "MEMBRE")
                         .requestMatchers("/api/teams/**")
-                        .hasAnyRole(
-                                "ADMIN",
-                                "CHEF_PROJET"
-                        )
+                        .hasAnyRole("ADMIN", "CHEF_PROJET")
 
                         // API PROJECTS
                         .requestMatchers("/api/projects/**")

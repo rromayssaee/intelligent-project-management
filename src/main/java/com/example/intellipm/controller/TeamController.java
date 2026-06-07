@@ -1,19 +1,25 @@
 package com.example.intellipm.controller;
 
 import com.example.intellipm.entity.Team;
+import com.example.intellipm.entity.User;
+import com.example.intellipm.repository.UserRepository;
 import com.example.intellipm.service.TeamService;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/teams")
 public class TeamController {
 
     private final TeamService teamService;
+    private final UserRepository userRepository;
 
-    public TeamController(TeamService teamService) {
-        this.teamService = teamService;
+    public TeamController(TeamService teamService, UserRepository userRepository) {
+        this.teamService    = teamService;
+        this.userRepository = userRepository;
     }
 
     @PostMapping
@@ -22,7 +28,17 @@ public class TeamController {
     }
 
     @GetMapping
-    public List<Team> afficherTeams() {
+    public List<Team> afficherTeams(Authentication auth) {
+        User user = userRepository.findByEmail(auth.getName()).orElse(null);
+
+        // MEMBRE → uniquement ses équipes
+        if (user != null && "MEMBRE".equals(user.getRole().name())) {
+            return teamService.afficherTeams().stream()
+                    .filter(t -> t.getUsers().stream()
+                            .anyMatch(u -> u.getId().equals(user.getId())))
+                    .collect(Collectors.toList());
+        }
+
         return teamService.afficherTeams();
     }
 
