@@ -64,7 +64,8 @@ public class SecurityConfig {
                                 "/projects",
                                 "/tasks",
                                 "/teams",
-                                "/users"
+                                "/users",
+                                "/reports"
                         ).permitAll()
 
                         // API USERS — GET autorisé pour CHEF_PROJET (pour gérer les membres d'équipe)

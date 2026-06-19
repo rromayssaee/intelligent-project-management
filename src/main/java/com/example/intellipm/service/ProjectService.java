@@ -2,9 +2,11 @@ package com.example.intellipm.service;
 
 import com.example.intellipm.entity.Project;
 import com.example.intellipm.entity.Team;
+import com.example.intellipm.entity.User;
 import com.example.intellipm.exception.ResourceNotFoundException;
 import com.example.intellipm.repository.ProjectRepository;
 import com.example.intellipm.repository.TeamRepository;
+import com.example.intellipm.repository.UserRepository;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -14,11 +16,14 @@ public class ProjectService {
 
     private final ProjectRepository projectRepository;
     private final TeamRepository teamRepository;
+    private final UserRepository userRepository;
 
     public ProjectService(ProjectRepository projectRepository,
-                          TeamRepository teamRepository) {
+                          TeamRepository teamRepository,
+                          UserRepository userRepository) {
         this.projectRepository = projectRepository;
         this.teamRepository    = teamRepository;
+        this.userRepository    = userRepository;
     }
 
     public Project ajouterProject(Project project) {
@@ -26,6 +31,11 @@ public class ProjectService {
         if (project.getTeam() != null && project.getTeam().getId() != null) {
             Team team = teamRepository.findById(project.getTeam().getId()).orElse(null);
             project.setTeam(team);
+        }
+        // Associer le chef de projet si fourni
+        if (project.getChefProjet() != null && project.getChefProjet().getId() != null) {
+            User chef = userRepository.findById(project.getChefProjet().getId()).orElse(null);
+            project.setChefProjet(chef);
         }
         return projectRepository.save(project);
     }
@@ -59,6 +69,14 @@ public class ProjectService {
             project.setTeam(team);
         } else {
             project.setTeam(null);
+        }
+
+        // Mettre à jour le chef de projet
+        if (nouveauProject.getChefProjet() != null && nouveauProject.getChefProjet().getId() != null) {
+            User chef = userRepository.findById(nouveauProject.getChefProjet().getId()).orElse(null);
+            project.setChefProjet(chef);
+        } else {
+            project.setChefProjet(null);
         }
 
         return projectRepository.save(project);

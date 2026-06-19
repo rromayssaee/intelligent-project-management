@@ -91,6 +91,7 @@
         .date-late { color:var(--red);font-weight:700; }
 
         .team-chip { display:inline-flex;align-items:center;gap:6px;background:#f5f3ff;color:#7c3aed;padding:5px 11px;border-radius:99px;font-size:12px;font-weight:600; }
+        .chef-chip { display:inline-flex;align-items:center;gap:6px;background:#eff6ff;color:#2563eb;padding:5px 11px;border-radius:99px;font-size:12px;font-weight:600; }
 
         .progress-wrap { display:flex;flex-direction:column;gap:5px; }
         .progress-meta { display:flex;justify-content:space-between;font-size:12px;color:var(--muted); }
@@ -163,6 +164,13 @@
                 <div class="field"><label>Date fin</label><input type="date" id="dateFin"></div>
             </div>
             <div class="field"><label>Équipe associée</label><select id="teamId"><option value="">-- Aucune équipe --</option></select></div>
+            <!-- ✅ NOUVEAU : Chef de projet -->
+            <div class="field">
+                <label><i class="bi bi-person-badge" style="color:var(--accent);margin-right:5px"></i>Chef de projet *</label>
+                <select id="chefProjetId">
+                    <option value="">-- Sélectionner un chef de projet --</option>
+                </select>
+            </div>
             <div class="modal-footer">
                 <button class="btn-cancel" onclick="closeModal('addModal')">Annuler</button>
                 <button class="btn-save" onclick="addProject()"><i class="bi bi-save me-1"></i>Enregistrer</button>
@@ -204,6 +212,13 @@
                 <div class="field"><label>Date fin</label><input type="date" id="editDateFin"></div>
             </div>
             <div class="field"><label>Équipe associée</label><select id="editTeamId"><option value="">-- Aucune équipe --</option></select></div>
+            <!-- ✅ NOUVEAU : Chef de projet -->
+            <div class="field">
+                <label><i class="bi bi-person-badge" style="color:var(--accent);margin-right:5px"></i>Chef de projet *</label>
+                <select id="editChefProjetId">
+                    <option value="">-- Sélectionner un chef de projet --</option>
+                </select>
+            </div>
             <div class="modal-footer">
                 <button class="btn-cancel" onclick="closeModal('editModal')">Annuler</button>
                 <button class="btn-update" onclick="updateProject()"><i class="bi bi-save me-1"></i>Mettre à jour</button>
@@ -223,6 +238,7 @@
         <a href="/dashboard" class="nav-link"><i class="bi bi-grid-fill"></i> Dashboard</a>
         <a href="/projects"  class="nav-link active"><i class="bi bi-folder-fill"></i> Projets</a>
         <a href="/teams"     class="nav-link" id="teamsBtn"><i class="bi bi-people-fill"></i> Équipes</a>
+        <a href="/reports"   class="nav-link" id="reportsBtn"><i class="bi bi-bar-chart-fill"></i> Rapports</a>
         <div class="nav-divider" id="adminDivider"></div>
         <div class="nav-label" id="adminLabel">Admin</div>
         <a href="/users"     class="nav-link" id="usersBtn"><i class="bi bi-person-fill"></i> Utilisateurs</a>
@@ -301,7 +317,7 @@
         document.getElementById("adminDivider").style.display  = "none";
     }
     if (role === "MEMBRE") {
-        document.getElementById("teamsBtn").style.display      = "none";
+        document.getElementById("reportsBtn").style.display    = "none";
         document.getElementById("addProjectBtn").style.display = "none";
     }
 
@@ -316,6 +332,18 @@
             document.getElementById("teamId").innerHTML = opts;
             document.getElementById("editTeamId").innerHTML = opts;
         }).catch(()=>{});
+    }
+
+    // ✅ NOUVEAU : CHARGER LES CHEFS DE PROJET
+    function loadChefs() {
+        fetch("/api/users", { headers: { "Authorization": "Bearer " + token } })
+            .then(r => r.json()).then(users => {
+            const chefs = users.filter(u => u.role === "CHEF_PROJET");
+            const opts = `<option value="">-- Sélectionner un chef de projet --</option>` +
+                chefs.map(c => `<option value="${c.id}">${c.nom} ${c.prenom}</option>`).join("");
+            document.getElementById("chefProjetId").innerHTML = opts;
+            document.getElementById("editChefProjetId").innerHTML = opts;
+        }).catch(() => {});
     }
 
     // CHARGER PROJETS
@@ -349,6 +377,10 @@
             const doneCount = p.tasks ? p.tasks.filter(t=>t.statut==="TERMINEE").length : 0;
             const pct       = taskCount > 0 ? Math.round((doneCount/taskCount)*100) : 0;
             const barColor  = pct===100 ? "#16a34a" : "#2563eb";
+            // ✅ NOUVEAU : affichage chef de projet dans la carte
+            const chefHtml  = p.chefProjet
+                ? `<div class="chef-chip"><i class="bi bi-person-badge-fill"></i>${p.chefProjet.nom} ${p.chefProjet.prenom}</div>`
+                : '';
             return `
 <div class="pcard ${isLate?'late':''}">
     <div class="pcard-top">
@@ -362,7 +394,10 @@
         <i class="bi bi-arrow-right" style="opacity:.4"></i>
         <span class="${isLate?'date-late':''}">${p.dateFin||"—"}${isLate?' <i class="bi bi-alarm"></i>':''}</span>
     </div>
-    ${p.team ? `<div class="team-chip"><i class="bi bi-people-fill"></i>${p.team.nom}</div>` : ''}
+    <div style="display:flex;gap:8px;flex-wrap:wrap;">
+        ${p.team ? `<div class="team-chip"><i class="bi bi-people-fill"></i>${p.team.nom}</div>` : ''}
+        ${chefHtml}
+    </div>
     <div class="progress-wrap">
         <div class="progress-meta"><span>Avancement</span><strong>${pct}%</strong></div>
         <div class="progress-bar-bg"><div class="progress-bar-fill" style="width:${pct}%;background:${barColor}"></div></div>
@@ -402,36 +437,61 @@
     function closeModal(id) { document.getElementById(id).style.display="none"; }
     document.querySelectorAll(".overlay").forEach(o => o.addEventListener("click",e=>{ if(e.target===o) closeModal(o.id); }));
 
+    // ✅ MODIFIÉ : addProject inclut chefProjet
     function addProject() {
         const titre = document.getElementById("titre").value.trim();
         if (!titre) { alert("Le titre est obligatoire"); return; }
+        const chefId = document.getElementById("chefProjetId").value;
         fetch("/api/projects", {
             method:"POST", headers:{"Content-Type":"application/json","Authorization":"Bearer "+token},
-            body: JSON.stringify({ titre, description:document.getElementById("description").value, statut:document.getElementById("statut").value, priorite:document.getElementById("priorite").value, dateDebut:document.getElementById("dateDebut").value||null, dateFin:document.getElementById("dateFin").value||null, team:document.getElementById("teamId").value?{id:parseInt(document.getElementById("teamId").value)}:null })
+            body: JSON.stringify({
+                titre,
+                description: document.getElementById("description").value,
+                statut:      document.getElementById("statut").value,
+                priorite:    document.getElementById("priorite").value,
+                dateDebut:   document.getElementById("dateDebut").value||null,
+                dateFin:     document.getElementById("dateFin").value||null,
+                team:        document.getElementById("teamId").value ? {id: parseInt(document.getElementById("teamId").value)} : null,
+                chefProjet:  chefId ? {id: parseInt(chefId)} : null
+            })
         }).then(r=>{ if(r.ok){closeModal("addModal");loadProjects();}else alert("Erreur lors de l'ajout"); });
     }
 
+    // ✅ MODIFIÉ : editProject pré-remplit chefProjet
     function editProject(id) {
         fetch("/api/projects/"+id, { headers:{"Authorization":"Bearer "+token} })
             .then(r=>r.json()).then(p=>{
-            document.getElementById("editId").value          = p.id;
-            document.getElementById("editTitre").value       = p.titre;
-            document.getElementById("editDescription").value = p.description||"";
-            document.getElementById("editStatut").value      = p.statut||"EN_COURS";
-            document.getElementById("editPriorite").value    = p.priorite||"MOYENNE";
-            document.getElementById("editDateDebut").value   = p.dateDebut||"";
-            document.getElementById("editDateFin").value     = p.dateFin||"";
-            document.getElementById("editTeamId").value      = p.team?p.team.id:"";
+            document.getElementById("editId").value              = p.id;
+            document.getElementById("editTitre").value           = p.titre;
+            document.getElementById("editDescription").value     = p.description||"";
+            document.getElementById("editStatut").value          = p.statut||"EN_COURS";
+            document.getElementById("editPriorite").value        = p.priorite||"MOYENNE";
+            document.getElementById("editDateDebut").value       = p.dateDebut||"";
+            document.getElementById("editDateFin").value         = p.dateFin||"";
+            document.getElementById("editTeamId").value          = p.team ? p.team.id : "";
+            document.getElementById("editChefProjetId").value    = p.chefProjet ? p.chefProjet.id : "";
             openModal("editModal");
         });
     }
 
+    // ✅ MODIFIÉ : updateProject inclut chefProjet
     function updateProject() {
-        const id=document.getElementById("editId").value, titre=document.getElementById("editTitre").value.trim();
-        if(!titre){alert("Le titre est obligatoire");return;}
+        const id    = document.getElementById("editId").value;
+        const titre = document.getElementById("editTitre").value.trim();
+        if (!titre) { alert("Le titre est obligatoire"); return; }
+        const chefId = document.getElementById("editChefProjetId").value;
         fetch("/api/projects/"+id, {
             method:"PUT", headers:{"Content-Type":"application/json","Authorization":"Bearer "+token},
-            body: JSON.stringify({ titre, description:document.getElementById("editDescription").value, statut:document.getElementById("editStatut").value, priorite:document.getElementById("editPriorite").value, dateDebut:document.getElementById("editDateDebut").value||null, dateFin:document.getElementById("editDateFin").value||null, team:document.getElementById("editTeamId").value?{id:parseInt(document.getElementById("editTeamId").value)}:null })
+            body: JSON.stringify({
+                titre,
+                description: document.getElementById("editDescription").value,
+                statut:      document.getElementById("editStatut").value,
+                priorite:    document.getElementById("editPriorite").value,
+                dateDebut:   document.getElementById("editDateDebut").value||null,
+                dateFin:     document.getElementById("editDateFin").value||null,
+                team:        document.getElementById("editTeamId").value ? {id: parseInt(document.getElementById("editTeamId").value)} : null,
+                chefProjet:  chefId ? {id: parseInt(chefId)} : null
+            })
         }).then(r=>{ if(r.ok){closeModal("editModal");loadProjects();}else alert("Erreur"); });
     }
 
@@ -444,6 +504,7 @@
     function logout() { localStorage.clear(); window.location.href="/login"; }
 
     loadTeams();
+    loadChefs();   // ✅ NOUVEAU
     loadProjects();
 
     // Ouvrir le modal si venant du dashboard

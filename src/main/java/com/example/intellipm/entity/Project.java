@@ -5,6 +5,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 
+
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
@@ -40,6 +41,11 @@ public class Project {
     @JsonIgnoreProperties("users")
     private Team team;
 
+    @ManyToOne
+    @JoinColumn(name = "chef_projet_id")
+    @JsonIgnoreProperties({"password", "tasks"})
+    private User chefProjet;
+
     public Project() {}
 
     public Long getId() { return id; }
@@ -67,4 +73,7 @@ public class Project {
 
     public Team getTeam() { return team; }
     public void setTeam(Team team) { this.team = team; }
+
+    public User getChefProjet() { return chefProjet; }
+    public void setChefProjet(User chefProjet) { this.chefProjet = chefProjet; }
 }

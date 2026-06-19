@@ -71,6 +71,27 @@
         .ai-name { font-size:13px; font-weight:600; }
         .ai-desc { font-size:12px; color:var(--muted); margin-top:1px; }
         .ai-arrow { margin-left:auto; color:var(--muted); font-size:13px; }
+
+        /* FEATURED PROJECTS */
+        .projects-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(280px,1fr)); gap:16px; padding:18px 20px; }
+        .pcard { background:#f8fafc; border:1px solid var(--border); border-radius:13px; padding:18px; text-decoration:none; color:var(--text); display:flex; flex-direction:column; gap:12px; transition:box-shadow .2s,transform .2s; }
+        .pcard:hover { box-shadow:0 6px 18px rgba(0,0,0,.08); transform:translateY(-2px); background:var(--white); }
+        .pcard-top { display:flex; justify-content:space-between; align-items:flex-start; gap:10px; }
+        .pcard-title { font-size:14.5px; font-weight:700; line-height:1.3; }
+        .pcard-icon { width:34px; height:34px; border-radius:9px; background:#eff6ff; color:#2563eb; display:flex; align-items:center; justify-content:center; font-size:15px; flex-shrink:0; }
+        .pcard-badges { display:flex; gap:6px; flex-wrap:wrap; }
+        .pbadge { font-size:11px; font-weight:600; padding:3px 9px; border-radius:99px; }
+        .pb-progress  { background:#fef3c7; color:#d97706; }
+        .pb-planned   { background:#eff6ff; color:#2563eb; }
+        .pb-done      { background:#dcfce7; color:#16a34a; }
+        .pb-suspended { background:#fee2e2; color:#dc2626; }
+        .pb-default   { background:#f1f5f9; color:#475569; }
+        .pcard-progress-row { display:flex; justify-content:space-between; align-items:center; font-size:11.5px; color:var(--muted); font-weight:600; }
+        .pcard-track { height:7px; border-radius:99px; background:#e2e8f0; overflow:hidden; }
+        .pcard-fill { height:100%; border-radius:99px; background:var(--accent); }
+        .pcard-meta { display:flex; align-items:center; gap:6px; font-size:12px; color:var(--muted); }
+        .projects-empty { padding:50px 20px; text-align:center; color:var(--muted); }
+        .projects-empty i { font-size:38px; opacity:.3; display:block; margin-bottom:10px; }
     </style>
 </head>
 <body>
@@ -88,6 +109,7 @@
         <a href="/dashboard" class="nav-link active"><i class="bi bi-grid-fill"></i> Dashboard</a>
         <a href="/projects"  class="nav-link"><i class="bi bi-folder-fill"></i> Projets</a>
         <a href="/teams"     class="nav-link" id="teamsBtn"><i class="bi bi-people-fill"></i> Équipes</a>
+        <a href="/reports"   class="nav-link" id="reportsBtn"><i class="bi bi-bar-chart-fill"></i> Rapports</a>
         <div class="nav-divider" id="adminDivider"></div>
         <div class="nav-section-label" id="adminLabel">Admin</div>
         <a href="/users"   class="nav-link" id="usersBtn"><i class="bi bi-person-fill"></i> Utilisateurs</a>
@@ -134,12 +156,44 @@
         </div>
     </div>
 
+    <div class="card" id="reportsCard" style="margin-bottom:24px;display:none;">
+        <div class="card-head">
+            <span class="card-title"><i class="bi bi-bar-chart-fill" style="color:var(--accent);margin-right:6px;"></i>Aperçu des rapports</span>
+            <a href="/reports" class="chip chip-blue" style="text-decoration:none;">Voir tout <i class="bi bi-arrow-right" style="margin-left:3px;"></i></a>
+        </div>
+        <div style="padding:22px 20px;">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+                <span style="font-size:13px;color:var(--muted);font-weight:500;">Avancement global (tous projets)</span>
+                <span style="font-size:20px;font-weight:800;color:var(--accent);" id="rGlobalPct">—</span>
+            </div>
+            <div style="height:14px;border-radius:99px;background:#f1f5f9;overflow:hidden;">
+                <div id="rGlobalBar" style="height:100%;border-radius:99px;background:var(--accent);width:0%;transition:width 1s ease;"></div>
+            </div>
+            <div style="display:flex;gap:24px;margin-top:18px;flex-wrap:wrap;">
+                <div style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--muted);">
+                    <span style="width:9px;height:9px;border-radius:50%;background:var(--green);display:inline-block;"></span>
+                    <span id="rDone">0</span> terminées
+                </div>
+                <div style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--muted);">
+                    <span style="width:9px;height:9px;border-radius:50%;background:var(--accent);display:inline-block;"></span>
+                    <span id="rProgress">0</span> en cours
+                </div>
+                <div style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--muted);">
+                    <span style="width:9px;height:9px;border-radius:50%;background:#dc2626;display:inline-block;"></span>
+                    <span id="rLate">0</span> en retard
+                </div>
+            </div>
+        </div>
+    </div>
+
     <div class="card">
         <div class="card-head">
-            <span class="card-title">Actions rapides</span>
-            <span class="chip chip-blue" id="roleChip">—</span>
+            <span class="card-title"><i class="bi bi-folder-fill" style="color:var(--accent);margin-right:6px;"></i>Projets en vedette</span>
+            <a href="/projects" class="chip chip-blue" style="text-decoration:none;">Voir tout <i class="bi bi-arrow-right" style="margin-left:3px;"></i></a>
         </div>
-        <div id="actions"></div>
+        <div id="featuredProjects" class="projects-grid">
+            <div class="projects-empty"><i class="bi bi-hourglass-split"></i><p>Chargement...</p></div>
+        </div>
     </div>
 </main>
 
@@ -160,7 +214,6 @@
     document.getElementById("uAvatar").innerText  = name.charAt(0).toUpperCase();
     document.getElementById("uName").innerText    = name;
     document.getElementById("uRole").innerText    = role || "—";
-    document.getElementById("roleChip").innerText = role || "—";
     document.getElementById("greeting").innerText = "Bonjour, " + name + " 👋";
 
     // Masquer admin si pas ADMIN
@@ -172,52 +225,62 @@
 
     // Masquer équipes pour MEMBRE
     if (role === "MEMBRE") {
-        document.getElementById("teamsBtn").style.display = "none";
+        document.getElementById("reportsBtn").style.display = "none";
     }
 
-    // Actions rapides par rôle
-    const defs = {
-        ADMIN: [
-            { i:"bi-folder-plus",  bg:"#eff6ff", c:"#2563eb", href:"#", n:"Nouveau projet",     d:"Créer et suivre vos projets",        fn:"goToNewProject()" },
-            { i:"bi-people",       bg:"#f5f3ff", c:"#7c3aed", href:"/teams",    n:"Gérer les équipes",  d:"Organiser les membres" },
-            { i:"bi-person-plus",  bg:"#f0fdf4", c:"#16a34a", href:"#", n:"Ajouter un utilisateur", d:"Créer un nouveau compte", fn:"goToNewUser()" },
-        ],
-        CHEF_PROJET: [
-            { i:"bi-folder-plus",  bg:"#eff6ff", c:"#2563eb", href:"#", n:"Nouveau projet",   d:"Gérer et suivre vos projets",          fn:"goToNewProject()" },
-            { i:"bi-people",       bg:"#f5f3ff", c:"#7c3aed", href:"/teams",    n:"Mes équipes",   d:"Gérer les membres" },
-        ],
-        MEMBRE: [
-            { i:"bi-list-check",   bg:"#eff6ff", c:"#2563eb", href:"#", n:"Mes tâches", d:"Voir les tâches qui vous sont assignées", fn:"goToMyTasks()" },
-        ],
+    // ===== PROJETS EN VEDETTE =====
+    const statutBadge = {
+        EN_COURS:  ["pb-progress",  "En cours"],
+        PLANIFIE:  ["pb-planned",   "Planifié"],
+        TERMINE:   ["pb-done",      "Terminé"],
+        SUSPENDU:  ["pb-suspended", "Suspendu"],
     };
 
-    const list = defs[role] || defs.MEMBRE;
-    document.getElementById("actions").innerHTML = list.map(a => `
-        <a class="action-item" href="${a.href}" ${a.fn ? `onclick="event.preventDefault();${a.fn}"` : ''}>
-            <div class="ai-icon" style="background:${a.bg};color:${a.c}"><i class="bi ${a.i}"></i></div>
-            <div><div class="ai-name">${a.n}</div><div class="ai-desc">${a.d}</div></div>
-            <i class="bi bi-chevron-right ai-arrow"></i>
-        </a>
-    `).join("");
+    fetch("/api/projects", { headers: { "Authorization": "Bearer " + token } })
+        .then(r => r.json())
+        .then(projects => {
+            const container = document.getElementById("featuredProjects");
+            if (!projects || projects.length === 0) {
+                container.innerHTML = `<div class="projects-empty"><i class="bi bi-inbox"></i><p>Aucun projet pour le moment</p></div>`;
+                return;
+            }
 
-    function goToNewProject() {
-        window.location.href = "/projects?new=1";
-    }
+            // Prioriser les projets actifs (EN_COURS), puis les plus récents, limité à 6
+            const sorted = [...projects].sort((a, b) => {
+                if (a.statut === "EN_COURS" && b.statut !== "EN_COURS") return -1;
+                if (b.statut === "EN_COURS" && a.statut !== "EN_COURS") return 1;
+                return (b.id || 0) - (a.id || 0);
+            }).slice(0, 6);
 
-    function goToNewUser() {
-        window.location.href = "/users?new=1";
-    }
+            container.innerHTML = sorted.map(p => {
+                const tasks = p.tasks || [];
+                const total = tasks.length;
+                const done  = tasks.filter(t => t.statut === "TERMINEE").length;
+                const pct   = total > 0 ? Math.round((done / total) * 100) : 0;
+                const [cls, label] = statutBadge[p.statut] || ["pb-default", p.statut || "—"];
 
-    function goToMyTasks() {
-        fetch("/api/projects", { headers: { "Authorization": "Bearer " + token } })
-            .then(r => r.json())
-            .then(projects => {
-                if (projects.length === 0) { alert("Aucun projet ne vous est assigné."); return; }
-                if (projects.length === 1) { window.location.href = "/tasks?projectId=" + projects[0].id; }
-                else { window.location.href = "/projects"; }
-            })
-            .catch(() => window.location.href = "/projects");
-    }
+                return `
+                <a class="pcard" href="/tasks?projectId=${p.id}">
+                    <div class="pcard-top">
+                        <div class="pcard-title">${p.titre}</div>
+                        <div class="pcard-icon"><i class="bi bi-folder-fill"></i></div>
+                    </div>
+                    <div class="pcard-badges">
+                        <span class="pbadge ${cls}">${label}</span>
+                        ${p.team ? `<span class="pbadge pb-default"><i class="bi bi-people-fill"></i> ${p.team.nom}</span>` : ""}
+                    </div>
+                    <div>
+                        <div class="pcard-progress-row"><span>${done}/${total} tâches</span><span>${pct}%</span></div>
+                        <div class="pcard-track" style="margin-top:5px;"><div class="pcard-fill" style="width:${pct}%"></div></div>
+                    </div>
+                    ${p.dateFin ? `<div class="pcard-meta"><i class="bi bi-calendar-event"></i> Échéance : ${p.dateFin}</div>` : ""}
+                </a>`;
+            }).join("");
+        })
+        .catch(() => {
+            document.getElementById("featuredProjects").innerHTML =
+                `<div class="projects-empty"><i class="bi bi-exclamation-circle"></i><p>Erreur de chargement</p></div>`;
+        });
 
     fetch("/api/dashboard", { headers: { "Authorization": "Bearer " + token } })
         .then(r => r.json())
@@ -227,6 +290,43 @@
             document.getElementById("cUsers").innerText    = d.users    ?? "—";
             document.getElementById("cTeams").innerText    = d.teams    ?? "—";
         });
+
+    // ===== APERÇU DES RAPPORTS (ADMIN / CHEF_PROJET uniquement) =====
+    if (role === "ADMIN" || role === "CHEF_PROJET") {
+        fetch("/api/projects", { headers: { "Authorization": "Bearer " + token } })
+            .then(r => r.json())
+            .then(projects => {
+                if (!projects || projects.length === 0) return;
+
+                Promise.all(
+                    projects.map(p =>
+                        fetch(`/api/reports/project/${p.id}`, { headers: { "Authorization": "Bearer " + token } })
+                            .then(r => r.ok ? r.json() : null)
+                            .catch(() => null)
+                    )
+                ).then(reports => {
+                    const valid = reports.filter(r => r);
+                    if (valid.length === 0) return;
+
+                    const totalTaches    = valid.reduce((s, r) => s + r.totalTaches, 0);
+                    const tachesDone     = valid.reduce((s, r) => s + r.tachesTerminees, 0);
+                    const tachesProgress = valid.reduce((s, r) => s + r.tachesEnCours, 0);
+                    const tachesLate     = valid.reduce((s, r) => s + r.tachesEnRetard, 0);
+                    const pct = totalTaches > 0 ? Math.round((tachesDone / totalTaches) * 100) : 0;
+
+                    document.getElementById("rGlobalPct").innerText = pct + "%";
+                    document.getElementById("rGlobalBar").style.width = pct + "%";
+                    document.getElementById("rGlobalBar").style.background =
+                        pct === 100 ? "var(--green)" : pct >= 50 ? "var(--accent)" : "var(--amber)";
+                    document.getElementById("rDone").innerText     = tachesDone;
+                    document.getElementById("rProgress").innerText = tachesProgress;
+                    document.getElementById("rLate").innerText     = tachesLate;
+
+                    document.getElementById("reportsCard").style.display = "block";
+                });
+            })
+            .catch(() => {});
+    }
 
     function logout() { localStorage.clear(); window.location.href = "/login"; }
 </script>
