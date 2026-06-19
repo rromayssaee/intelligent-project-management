@@ -31,14 +31,19 @@ public class ProjectController {
     @GetMapping
     public List<Project> afficherProjects(Authentication auth) {
         User user = userRepository.findByEmail(auth.getName()).orElse(null);
+        if (user == null) return List.of();
 
-        // MEMBRE → uniquement ses projets (équipes dont il fait partie)
-        if (user != null && "MEMBRE".equals(user.getRole().name())) {
-            return projectService.afficherProjectsParUser(user.getId());
+        switch (user.getRole().name()) {
+            case "MEMBRE":
+                // Uniquement les projets des équipes dont il fait partie
+                return projectService.afficherProjectsParUser(user.getId());
+            case "CHEF_PROJET":
+                // Uniquement les projets dont il est chef
+                return projectService.afficherProjectsParChef(user.getId());
+            default:
+                // ADMIN → tous les projets
+                return projectService.afficherProjects();
         }
-
-        // ADMIN et CHEF_PROJET → tous les projets
-        return projectService.afficherProjects();
     }
 
     @GetMapping("/{id}")

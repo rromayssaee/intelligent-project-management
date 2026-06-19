@@ -385,18 +385,21 @@
         const password = document.getElementById("password").value;
         if (!nom || !email || !password) { alert("Tous les champs obligatoires doivent être remplis"); return; }
 
-        fetch("/api/auth/register", {
+        fetch("/api/users", {
             method: "POST",
             headers: { "Content-Type": "application/json", "Authorization": "Bearer " + token },
             body: JSON.stringify({
-                nom, email, password,
+                nom, email,
+                motDePasseHash: password,
                 role:      document.getElementById("role").value,
                 telephone: document.getElementById("telephone").value || null,
                 adresse:   document.getElementById("adresse").value   || null
             })
         }).then(r => {
             if (r.ok) { closeModal("addModal"); loadUsers(); }
-            else r.text().then(t => alert("Erreur : " + t));
+            else r.json().then(err => {
+                alert("Erreur : " + (err.message || "Une erreur est survenue (code " + r.status + ")"));
+            }).catch(() => alert("Erreur : une erreur est survenue (code " + r.status + ")"));
         });
     }
 

@@ -48,6 +48,10 @@ public class ProjectService {
         return projectRepository.findProjectsByUserId(userId);
     }
 
+    public List<Project> afficherProjectsParChef(Long chefId) {
+        return projectRepository.findByChefProjetId(chefId);
+    }
+
     public Project afficherProjectParId(Long id) {
         return projectRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Projet introuvable : " + id));

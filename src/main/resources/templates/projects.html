@@ -379,7 +379,7 @@
             const barColor  = pct===100 ? "#16a34a" : "#2563eb";
             // ✅ NOUVEAU : affichage chef de projet dans la carte
             const chefHtml  = p.chefProjet
-                ? `<div class="chef-chip"><i class="bi bi-person-badge-fill"></i>${p.chefProjet.nom} ${p.chefProjet.prenom}</div>`
+                ? `<div class="chef-chip"><i class="bi bi-person-badge-fill"></i>${p.chefProjet.nom}</div>`
                 : '';
             return `
 <div class="pcard ${isLate?'late':''}">
