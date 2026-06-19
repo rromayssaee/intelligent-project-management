@@ -318,6 +318,9 @@
     }
     if (role === "MEMBRE") {
         document.getElementById("reportsBtn").style.display    = "none";
+    }
+    // ✅ CHEF_PROJET et MEMBRE ne peuvent pas créer de projet (rôle ADMIN uniquement)
+    if (role !== "ADMIN") {
         document.getElementById("addProjectBtn").style.display = "none";
     }
 
@@ -405,10 +408,12 @@
     </div>
     <div class="pcard-actions">
         <a href="/tasks?projectId=${p.id}" class="act-btn a-tasks"><i class="bi bi-list-check"></i> Tâches</a>
-        ${role!=="MEMBRE"?`
+        ${role === "ADMIN" ? `
         <button class="act-btn a-edit" onclick="editProject(${p.id})"><i class="bi bi-pencil"></i> Modifier</button>
         <button class="act-btn a-del"  onclick="deleteProject(${p.id})"><i class="bi bi-trash"></i></button>
-        `:''}
+        ` : role === "CHEF_PROJET" ? `
+        <button class="act-btn a-edit" onclick="editProject(${p.id})"><i class="bi bi-pencil"></i> Modifier statut</button>
+        ` : ''}
     </div>
 </div>`;
         }).join("");

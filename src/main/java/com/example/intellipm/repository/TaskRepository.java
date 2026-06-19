@@ -14,6 +14,10 @@ public interface TaskRepository extends JpaRepository<Task, Long> {
 
     List<Task> findByProjectIdAndAssignedUserId(Long projectId, Long userId);
 
+    // ✅ Nombre de tâches appartenant aux projets d'un chef de projet
+    @Query("SELECT COUNT(t) FROM Task t WHERE t.project.chefProjet.id = :chefId")
+    long countByChefProjetId(@Param("chefId") Long chefId);
+
     // Désassigner toutes les tâches d'un user dans les projets d'une équipe
     @Modifying
     @Transactional
