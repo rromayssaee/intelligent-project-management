@@ -9,6 +9,7 @@ import com.example.intellipm.repository.TeamRepository;
 import com.example.intellipm.repository.UserRepository;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -27,10 +28,15 @@ public class ProjectService {
     }
 
     public Project ajouterProject(Project project) {
-        // Associer l'équipe si fournie
-        if (project.getTeam() != null && project.getTeam().getId() != null) {
-            Team team = teamRepository.findById(project.getTeam().getId()).orElse(null);
-            project.setTeam(team);
+        // Associer les équipes si fournies
+        if (project.getTeams() != null && !project.getTeams().isEmpty()) {
+            List<Team> teams = new ArrayList<>();
+            for (Team t : project.getTeams()) {
+                if (t.getId() != null) {
+                    teamRepository.findById(t.getId()).ifPresent(teams::add);
+                }
+            }
+            project.setTeams(teams);
         }
         // Associer le chef de projet si fourni
         if (project.getChefProjet() != null && project.getChefProjet().getId() != null) {
@@ -67,12 +73,17 @@ public class ProjectService {
         project.setStatut(nouveauProject.getStatut());
         project.setPriorite(nouveauProject.getPriorite());
 
-        // Mettre à jour l'équipe associée
-        if (nouveauProject.getTeam() != null && nouveauProject.getTeam().getId() != null) {
-            Team team = teamRepository.findById(nouveauProject.getTeam().getId()).orElse(null);
-            project.setTeam(team);
+        // Mettre à jour les équipes associées
+        if (nouveauProject.getTeams() != null && !nouveauProject.getTeams().isEmpty()) {
+            List<Team> teams = new ArrayList<>();
+            for (Team t : nouveauProject.getTeams()) {
+                if (t.getId() != null) {
+                    teamRepository.findById(t.getId()).ifPresent(teams::add);
+                }
+            }
+            project.setTeams(teams);
         } else {
-            project.setTeam(null);
+            project.setTeams(new ArrayList<>());
         }
 
         // Mettre à jour le chef de projet

@@ -23,7 +23,7 @@ public interface TaskRepository extends JpaRepository<Task, Long> {
     @Transactional
     @Query("UPDATE Task t SET t.assignedUser = null, t.statut = 'CREEE' " +
             "WHERE t.assignedUser.id = :userId " +
-            "AND t.project.id IN (SELECT p.id FROM Project p WHERE p.team.id = :teamId)")
+            "AND t.project.id IN (SELECT p.id FROM Project p JOIN p.teams team WHERE team.id = :teamId)")
     void desassignerTachesUserDansEquipe(@Param("userId") Long userId,
                                          @Param("teamId") Long teamId);
 }

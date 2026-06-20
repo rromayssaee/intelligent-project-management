@@ -5,7 +5,6 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 
-
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
@@ -35,11 +34,14 @@ public class Project {
     @JsonIgnoreProperties("project")
     private List<Task> tasks = new ArrayList<>();
 
-    // ===== ASSOCIATION PROJET ↔ ÉQUIPE =====
-    @ManyToOne
-    @JoinColumn(name = "team_id")
+    @ManyToMany
+    @JoinTable(
+            name = "project_team",
+            joinColumns = @JoinColumn(name = "project_id"),
+            inverseJoinColumns = @JoinColumn(name = "team_id")
+    )
     @JsonIgnoreProperties("users")
-    private Team team;
+    private List<Team> teams = new ArrayList<>();
 
     @ManyToOne
     @JoinColumn(name = "chef_projet_id")
@@ -71,8 +73,8 @@ public class Project {
     public List<Task> getTasks() { return tasks; }
     public void setTasks(List<Task> tasks) { this.tasks = tasks; }
 
-    public Team getTeam() { return team; }
-    public void setTeam(Team team) { this.team = team; }
+    public List<Team> getTeams() { return teams; }
+    public void setTeams(List<Team> teams) { this.teams = teams; }
 
     public User getChefProjet() { return chefProjet; }
     public void setChefProjet(User chefProjet) { this.chefProjet = chefProjet; }

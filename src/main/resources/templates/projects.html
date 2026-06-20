@@ -122,6 +122,11 @@
         .field label { display:block;font-size:13px;font-weight:600;margin-bottom:6px; }
         .field input, .field select, .field textarea { width:100%;padding:10px 12px;border:1px solid var(--border);border-radius:9px;font-size:13px;font-family:inherit;color:var(--text);transition:.15s; }
         .field input:focus, .field select:focus, .field textarea:focus { outline:none;border-color:var(--accent); }
+        .teams-checklist { display:flex;flex-direction:column;gap:2px;max-height:160px;overflow-y:auto;border:1px solid var(--border);border-radius:9px;padding:6px; }
+        .teams-checklist .tc-empty { font-size:12.5px;color:var(--muted);padding:8px 6px; }
+        .tc-item { display:flex;align-items:center;gap:9px;padding:7px 8px;border-radius:7px;cursor:pointer;font-size:13px;transition:background .15s; }
+        .tc-item:hover { background:#f1f5f9; }
+        .tc-item input[type="checkbox"] { width:15px;height:15px;accent-color:var(--accent);cursor:pointer;flex-shrink:0; }
         .row2 { display:grid;grid-template-columns:1fr 1fr;gap:12px; }
         .modal-footer { display:flex;gap:8px;justify-content:flex-end;margin-top:20px; }
         .btn-cancel { padding:9px 18px;border:1px solid var(--border);border-radius:9px;background:var(--white);font-size:13px;font-weight:600;cursor:pointer;font-family:inherit; }
@@ -163,7 +168,11 @@
                 <div class="field"><label>Date début</label><input type="date" id="dateDebut"></div>
                 <div class="field"><label>Date fin</label><input type="date" id="dateFin"></div>
             </div>
-            <div class="field"><label>Équipe associée</label><select id="teamId"><option value="">-- Aucune équipe --</option></select></div>
+            <!-- ✅ MODIFIÉ : Équipes associées (multi-sélection) -->
+            <div class="field">
+                <label>Équipes associées</label>
+                <div class="teams-checklist" id="teamsChecklist"></div>
+            </div>
             <!-- ✅ NOUVEAU : Chef de projet -->
             <div class="field">
                 <label><i class="bi bi-person-badge" style="color:var(--accent);margin-right:5px"></i>Chef de projet *</label>
@@ -211,7 +220,11 @@
                 <div class="field"><label>Date début</label><input type="date" id="editDateDebut"></div>
                 <div class="field"><label>Date fin</label><input type="date" id="editDateFin"></div>
             </div>
-            <div class="field"><label>Équipe associée</label><select id="editTeamId"><option value="">-- Aucune équipe --</option></select></div>
+            <!-- ✅ MODIFIÉ : Équipes associées (multi-sélection) -->
+            <div class="field">
+                <label>Équipes associées</label>
+                <div class="teams-checklist" id="editTeamsChecklist"></div>
+            </div>
             <!-- ✅ NOUVEAU : Chef de projet -->
             <div class="field">
                 <label><i class="bi bi-person-badge" style="color:var(--accent);margin-right:5px"></i>Chef de projet *</label>
@@ -326,15 +339,26 @@
 
     let allProjects = [], allTeams = [];
 
-    // CHARGER ÉQUIPES
+    // CHARGER ÉQUIPES (✅ MODIFIÉ : checklist multi-équipes)
     function loadTeams() {
         fetch("/api/teams", { headers: { "Authorization": "Bearer " + token } })
             .then(r => r.json()).then(teams => {
             allTeams = teams;
-            const opts = `<option value="">-- Aucune équipe --</option>` + teams.map(t => `<option value="${t.id}">${t.nom}</option>`).join("");
-            document.getElementById("teamId").innerHTML = opts;
-            document.getElementById("editTeamId").innerHTML = opts;
+            const html = teams.length
+                ? teams.map(t => `
+                    <label class="tc-item">
+                        <input type="checkbox" class="team-checkbox" value="${t.id}">
+                        <i class="bi bi-people-fill" style="color:var(--purple)"></i> ${t.nom}
+                    </label>`).join("")
+                : `<div class="tc-empty">Aucune équipe disponible</div>`;
+            document.getElementById("teamsChecklist").innerHTML = html;
+            document.getElementById("editTeamsChecklist").innerHTML = html.replace(/team-checkbox/g, "edit-team-checkbox");
         }).catch(()=>{});
+    }
+
+    function getCheckedTeamIds(className) {
+        return Array.from(document.querySelectorAll("." + className + ":checked"))
+            .map(cb => ({ id: parseInt(cb.value) }));
     }
 
     // ✅ NOUVEAU : CHARGER LES CHEFS DE PROJET
@@ -398,7 +422,7 @@
         <span class="${isLate?'date-late':''}">${p.dateFin||"—"}${isLate?' <i class="bi bi-alarm"></i>':''}</span>
     </div>
     <div style="display:flex;gap:8px;flex-wrap:wrap;">
-        ${p.team ? `<div class="team-chip"><i class="bi bi-people-fill"></i>${p.team.nom}</div>` : ''}
+        ${(p.teams && p.teams.length) ? p.teams.map(t => `<div class="team-chip"><i class="bi bi-people-fill"></i>${t.nom}</div>`).join("") : ''}
         ${chefHtml}
     </div>
     <div class="progress-wrap">
@@ -442,7 +466,7 @@
     function closeModal(id) { document.getElementById(id).style.display="none"; }
     document.querySelectorAll(".overlay").forEach(o => o.addEventListener("click",e=>{ if(e.target===o) closeModal(o.id); }));
 
-    // ✅ MODIFIÉ : addProject inclut chefProjet
+    // ✅ MODIFIÉ : addProject inclut teams (multi-équipes) et chefProjet
     function addProject() {
         const titre = document.getElementById("titre").value.trim();
         if (!titre) { alert("Le titre est obligatoire"); return; }
@@ -456,13 +480,13 @@
                 priorite:    document.getElementById("priorite").value,
                 dateDebut:   document.getElementById("dateDebut").value||null,
                 dateFin:     document.getElementById("dateFin").value||null,
-                team:        document.getElementById("teamId").value ? {id: parseInt(document.getElementById("teamId").value)} : null,
+                teams:       getCheckedTeamIds("team-checkbox"),
                 chefProjet:  chefId ? {id: parseInt(chefId)} : null
             })
         }).then(r=>{ if(r.ok){closeModal("addModal");loadProjects();}else alert("Erreur lors de l'ajout"); });
     }
 
-    // ✅ MODIFIÉ : editProject pré-remplit chefProjet
+    // ✅ MODIFIÉ : editProject pré-coche les équipes et pré-remplit chefProjet
     function editProject(id) {
         fetch("/api/projects/"+id, { headers:{"Authorization":"Bearer "+token} })
             .then(r=>r.json()).then(p=>{
@@ -473,13 +497,16 @@
             document.getElementById("editPriorite").value        = p.priorite||"MOYENNE";
             document.getElementById("editDateDebut").value       = p.dateDebut||"";
             document.getElementById("editDateFin").value         = p.dateFin||"";
-            document.getElementById("editTeamId").value          = p.team ? p.team.id : "";
+            const teamIds = (p.teams||[]).map(t => t.id);
+            document.querySelectorAll(".edit-team-checkbox").forEach(cb => {
+                cb.checked = teamIds.includes(parseInt(cb.value));
+            });
             document.getElementById("editChefProjetId").value    = p.chefProjet ? p.chefProjet.id : "";
             openModal("editModal");
         });
     }
 
-    // ✅ MODIFIÉ : updateProject inclut chefProjet
+    // ✅ MODIFIÉ : updateProject inclut teams (multi-équipes) et chefProjet
     function updateProject() {
         const id    = document.getElementById("editId").value;
         const titre = document.getElementById("editTitre").value.trim();
@@ -494,7 +521,7 @@
                 priorite:    document.getElementById("editPriorite").value,
                 dateDebut:   document.getElementById("editDateDebut").value||null,
                 dateFin:     document.getElementById("editDateFin").value||null,
-                team:        document.getElementById("editTeamId").value ? {id: parseInt(document.getElementById("editTeamId").value)} : null,
+                teams:       getCheckedTeamIds("edit-team-checkbox"),
                 chefProjet:  chefId ? {id: parseInt(chefId)} : null
             })
         }).then(r=>{ if(r.ok){closeModal("editModal");loadProjects();}else alert("Erreur"); });

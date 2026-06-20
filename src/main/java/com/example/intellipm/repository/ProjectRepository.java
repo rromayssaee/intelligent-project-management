@@ -11,9 +11,8 @@ import java.util.List;
 @Repository
 public interface ProjectRepository extends JpaRepository<Project, Long> {
 
-    // Projets dont l'équipe contient un utilisateur spécifique (MEMBRE)
-    @Query("SELECT p FROM Project p WHERE p.team.id IN " +
-            "(SELECT t.id FROM Team t JOIN t.users u WHERE u.id = :userId)")
+    // Projets dont au moins une équipe contient un utilisateur spécifique (MEMBRE)
+    @Query("SELECT DISTINCT p FROM Project p JOIN p.teams t JOIN t.users u WHERE u.id = :userId")
     List<Project> findProjectsByUserId(@Param("userId") Long userId);
 
     // Projets dont le chef de projet est l'utilisateur connecté (CHEF_PROJET)

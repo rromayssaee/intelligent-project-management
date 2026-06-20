@@ -26,7 +26,6 @@ public class ProjectController {
         this.userRepository = userRepository;
     }
 
-    // ✅ Seul l'ADMIN peut créer un projet
     @PostMapping
     public Project ajouterProject(@Valid @RequestBody Project project,
                                   Authentication auth) {
@@ -38,16 +37,15 @@ public class ProjectController {
         return projectService.ajouterProject(project);
     }
 
-    // Chaque rôle voit ses projets filtrés
     @GetMapping
     public List<Project> afficherProjects(Authentication auth) {
         User user = getUser(auth);
         if (user == null) return List.of();
 
         return switch (user.getRole()) {
-            case MEMBRE     -> projectService.afficherProjectsParUser(user.getId());
+            case MEMBRE      -> projectService.afficherProjectsParUser(user.getId());
             case CHEF_PROJET -> projectService.afficherProjectsParChef(user.getId());
-            default          -> projectService.afficherProjects(); // ADMIN
+            default          -> projectService.afficherProjects();
         };
     }
 
@@ -56,7 +54,6 @@ public class ProjectController {
         return projectService.afficherProjectParId(id);
     }
 
-    // ✅ CHEF_PROJET peut modifier uniquement ses propres projets
     @PutMapping("/{id}")
     public Project modifierProject(@PathVariable Long id,
                                    @Valid @RequestBody Project project,
@@ -71,15 +68,14 @@ public class ProjectController {
                 throw new ResponseStatusException(HttpStatus.FORBIDDEN,
                         "Vous ne pouvez modifier que vos propres projets.");
             }
-            // Le chef ne peut pas changer le chefProjet ni l'équipe
+            // Le chef ne peut pas changer le chefProjet ni les équipes
             project.setChefProjet(existing.getChefProjet());
-            project.setTeam(existing.getTeam());
+            project.setTeams(existing.getTeams());
         }
 
         return projectService.modifierProject(id, project);
     }
 
-    // ✅ Seul l'ADMIN peut supprimer un projet
     @DeleteMapping("/{id}")
     public void supprimerProject(@PathVariable Long id, Authentication auth) {
         User user = getUser(auth);
