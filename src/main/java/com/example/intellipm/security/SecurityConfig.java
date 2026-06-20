@@ -55,6 +55,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/auth/**")
                         .permitAll()
 
+
                         // Pages HTML
                         .requestMatchers(
                                 "/",

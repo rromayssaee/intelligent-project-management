@@ -343,7 +343,7 @@
             .then(r => r.json()).then(users => {
             const chefs = users.filter(u => u.role === "CHEF_PROJET");
             const opts = `<option value="">-- Sélectionner un chef de projet --</option>` +
-                chefs.map(c => `<option value="${c.id}">${c.nom} ${c.prenom}</option>`).join("");
+                chefs.map(c => `<option value="${c.id}">${c.nom}</option>`)
             document.getElementById("chefProjetId").innerHTML = opts;
             document.getElementById("editChefProjetId").innerHTML = opts;
         }).catch(() => {});
@@ -509,7 +509,7 @@
     function logout() { localStorage.clear(); window.location.href="/login"; }
 
     loadTeams();
-    loadChefs();   // ✅ NOUVEAU
+    loadChefs();
     loadProjects();
 
     // Ouvrir le modal si venant du dashboard
